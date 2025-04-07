@@ -1,9 +1,11 @@
 # Music-Recommendation
 Music recommendation software using Spotify API
 
-# Main Idea - Create a modular music recommendation system which pigeon-holes suggestions for a specific genre/style. You can then save that recommendation algorithm, and create a new one aiming for a new genre/style. For each algorithm, the user rates the song presented to them–they can then add it or/and move on to the next song. A button, to ‘unspecify’ the genre, can be used to widen the search and remove you from potential pigeon-holes you encounter. 
+# Main Idea - 
+Create a modular music recommendation system which pigeon-holes suggestions for a specific genre/style. You can then save that recommendation algorithm, and create a new one aiming for a new genre/style. For each algorithm, the user rates the song presented to them–they can then add it or/and move on to the next song. A button, to ‘unspecify’ the genre, can be used to widen the search and remove you from potential pigeon-holes you encounter. 
 
-# Strategy - We will use the Spotify API to find correlational data between different songs depending on what playlists they’re in. A heat-map could then be created, gauging the correlation between different songs. 
+# Strategy - 
+We will use the Spotify API to find correlational data between different songs depending on what playlists they’re in. A heat-map could then be created, gauging the correlation between different songs. 
 Bayes’ Theorem must be used (e.g. Tokenization) 
 Neural Nets should be very useful (can also be used for the ‘unspecify’ button by increasing the step size and inputting a random value)
 Linear Regression could also be used although we would need to think about what ‘value’ we want to predict–or any boolean values (also very good for the ‘unspecify’ button)
