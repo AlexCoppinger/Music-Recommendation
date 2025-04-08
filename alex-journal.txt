@@ -1,0 +1,15 @@
+# Week 1
+
+This week I came up with the idea of the app
+I created a plan and rough outline for how we will achieve it
+I completed the README.md file and added it to our repository
+
+# Week 2
+I setup a proper coding environment
+Submitted an application for gitHub education for copilot
+
+Goals: 
+
+Setup the virtual environment for Django 
+Make the keys hidden
+Begin writing code for the algorithms
