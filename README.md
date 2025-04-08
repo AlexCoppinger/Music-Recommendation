@@ -67,4 +67,3 @@ What platforms will we use in general?
 
 This section will require potentially the most research
 
-testing stuff
