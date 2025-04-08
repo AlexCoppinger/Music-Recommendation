@@ -51,7 +51,7 @@ There is a settings.py file in Janata's but within the settings directory--I'm a
 Moving forward, we need to add the spotify API, of which Federico has a specific one. 
 We also need to come up with a proper name that makes it easier to organize this stuff--'music-recommendation' and 'spotify_app' and 'music_rec' aren't going to suffice
 I am also very confused on what the venv is for. I'm worried I may have created the venv and not used it properly since I don't understand how it works
-
+We need to understand how the keys mechanism works, and figure out how to implement the thing Janata did
 
 
 
