@@ -13,3 +13,60 @@ Goals:
 Setup the virtual environment for Django 
 Make the keys hidden
 Begin writing code for the algorithms
+
+
+Notes: 
+
+Janata's pwap (program) file includes:
+
+- migrations (a folder)
+- templates/pwap (a folder with html code)
+- __init__.py
+- admin.py 
+- apps.py 
+- models.py 
+- spotify.py 
+- tests.py 
+- urls.py ## this file is similar to ours from spotify_app
+- views. py 
+
+I am missing the spotify.py which probably comes from not linking my environment with the Spotify API
+I am also missing urls.py which I don't completely understand the point of that one
+
+
+Janata's psc182_s25--which I assume is analogous to our 'spotify_app' foldler-- includes:
+
+- settings (which includes 3 files: __init__.py, dev.py, and settings.py)
+-__init__.py 
+- asgi.py  
+- urls.py ## this file is also similar to ours but slightly different
+- wsgi.py 
+
+I don't know what the _pycache_ file in ours is for
+_init__.py may need to be duplicated into another directory within our 'spotify_app'
+There is no dev.py file anywhere, I forgot what it's for but there's barely anything in it in Janata's repository
+There is a settings.py file in Janata's but within the settings directory--I'm assuming this may have something to do with the secret keys stuff
+
+
+Moving forward, we need to add the spotify API, of which Federico has a specific one. 
+We also need to come up with a proper name that makes it easier to organize this stuff--'music-recommendation' and 'spotify_app' and 'music_rec' aren't going to suffice
+I am also very confused on what the venv is for. I'm worried I may have created the venv and not used it properly since I don't understand how it works
+
+
+
+
+
+
+
+Questions for Janata:
+
+- How does the venv work? What's its purpose? When I was just told 
+to put it, but I don't really know what it does--it also doesn't match
+his files on his repository
+- I forgot what his migrations file is for... why have it?
+- It seems like I have two apps, although I'm not sure--is this actually needed?
+ChatGPT 'told me' to do this, but I'm a bit confused on what is even going on and 
+don't know what it's used for or whether it's even necessary
+- Since I'm working with Federico, is there a specific convention he recommends to
+deal with our code? I understand gitHub is good at doing this, but it may get annoying
+to have to pull, commit, and push every single time. Is this needed? Is there a better way?
