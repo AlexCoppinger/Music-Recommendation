@@ -1,3 +1,5 @@
+# Week 1
+
 -	Clone the repo onto the computer
 -	Including the readme, we should include 2 extra ‘log-files’ to log our goals and accomplishments (dreams?)
 -	Django  Using Spotify API
@@ -66,3 +68,23 @@ I’m wondering if this is an excuse for him to be productive with coding
 
 To run server 
 Manage.py.runserver
+
+
+# Week 2
+
+#Wednesday meetup:
+Comparing the files from janata to our own, there are a few discrepancies: 
+
+In our vibelink file, we are missing: 
+- spotify.py --> Not really sure where this comes from but assuming it has something to do with spotify API
+- urls.py --> I assume this may to do with running the actual server? 
+- The templates/<proagram> directory --> it includes the html file (named search.html for some reason)
+
+In the musicrec folder, we are missing:
+- only the settings folder which includes a second setttings.py and __init__.py. It includes another dev.py file while
+- I am confused on what the _pycache_ file is. What are the binary files inside?
+
+
+Some goals to achieve: 
+- setup the secret client_ID mechanism 
+- Have a running server that can run locally
