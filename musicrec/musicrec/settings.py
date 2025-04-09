@@ -121,3 +121,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Spotify API credentials
+SPOTIFY_CLIENT_ID = "02e9e5ab60cd40429a9c707c58d873ed"
+SPOTIFY_CLIENT_SECRET = "55a6bad92a314682913021d2c715937d"
