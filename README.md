@@ -67,3 +67,6 @@ What platforms will we use in general?
 
 This section will require potentially the most research
 
+modular recommendation music software for vibes
+
+MVT

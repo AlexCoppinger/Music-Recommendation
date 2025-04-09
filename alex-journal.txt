@@ -1,5 +1,7 @@
 # Week 1
 
+The name of this algorithm is VibeLink
+
 This week I came up with the idea of the app
 I created a plan and rough outline for how we will achieve it
 I completed the README.md file and added it to our repository
@@ -16,6 +18,8 @@ Begin writing code for the algorithms
 
 
 Notes: 
+
+before each coding session, write: source venv/bin/activate
 
 Janata's pwap (program) file includes:
 
@@ -56,6 +60,8 @@ Moving forward, we need to add the spotify API, of which Federico has a specific
 We also need to come up with a proper name that makes it easier to organize this stuff--'music-recommendation' and 'spotify_app' and 'music_rec' aren't going to suffice
 I am also very confused on what the venv is for. I'm worried I may have created the venv and not used it properly since I don't understand how it works
 We need to understand how the keys mechanism works, and figure out how to implement the thing Janata did
+
+We need to figure out how to setup the spotify API thing, and get the keys
 
 
 
