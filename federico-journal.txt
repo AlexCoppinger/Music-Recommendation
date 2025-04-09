@@ -1,0 +1,16 @@
+# GENERAL:
+Virtual Environment Activation for each Session
+venv = source venv/bin/activate
+
+
+
+
+# CONCEPTS
+    NAME:
+    "DJ Smervin" (unofficial) aka "VibeLink" (official)
+
+
+# WEEK 1
+
+
+
