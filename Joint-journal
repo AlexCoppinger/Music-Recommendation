@@ -1,0 +1,68 @@
+-	Clone the repo onto the computer
+-	Including the readme, we should include 2 extra ‘log-files’ to log our goals and accomplishments (dreams?)
+-	Django  Using Spotify API
+-	Venv
+-	HTTP protocol  
+o	When go to URL, your browser will issue GET request
+o	2 most common request types are GET and POST
+	GET request fetches data
+	On the server there is a GET request
+	Generates some sort of response
+	Get request from clients, and generate response
+	POSTs request are used when submitting a form 
+•	When filling out a form and need to submit, it’s done with a POST request
+•	The data will get encrypted, a token imbeds in the page, and submitted with post request and valid
+•	Then returns some sort of response
+
+-	Spotipy
+-	Install all of these stuffs 
+-	“Querie is to setup Django project with Spotify API”
+-	Python manage.py  Command used to get to project 
+-	Python mange.py shell  to create a shell to access stuff 
+-	Settings.py  Keeps a bunch of stuff for running the program  System variables always capitalized (exposed within the settings)
+-	I guess IPython is a shell  What’s the use of using this over another shell?
+-	Create an app 
+o	Python manage.py startapp  <name>
+-	When we refer to ‘tables’ we mean ‘models’ or ‘datatables’
+o	Django will translate all databases and SQL stuff
+-	Migrations are the ‘branches’
+-	Views.py handles requests 
+Templates folder 
+-	Specific way for graphics 
+-	Set yourself up with Spotify API (there’s a website developer.spotify.com/dashboard)
+-	After creating app, add it to INSTALLED_APPS in settings.py
+-	For Redirect URIs need to do it locally:
+o	http://  something
+o	http://  IP address 127.0.0.01
+o	http://127.0.0.1/
+-	Get the key the ‘Client ID’ and the ‘Client secret’
+o	#add our spotify ID
+o	SPOTIFY_CLIENT_ID = ‘key’
+o	SPOTIFY_CLIENT_SECRET = ‘secret’
+o	Can create a configuration file locally using pyfile to read it 
+	Touch command updates a file history and also creates a file
+o	Load configuration file 
+	CONFIG_FILE = os.path.join(BASE_DIR, from, to)
+	In config file
+	In config params you don’t put strings in quotes 
+	Also secret the secret 
+o	
+-	We want to connect spotify API to our program
+-	Using spotipy.readthedocs.io/en/2.25.1/
+o	Modify stuff using these things 
+Pbd.set_trace() for setting trace for debugger
+
+
+
+I think it’s supposed to but idk
+Potential hw
+
+He setup the authentication thing 
+And now that that’s resolved, he wants to setup the view so that we 
+
+Endpoints for our URLs get specific??
+
+I’m wondering if this is an excuse for him to be productive with coding
+
+To run server 
+Manage.py.runserver
