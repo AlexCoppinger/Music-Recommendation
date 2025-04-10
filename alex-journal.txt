@@ -68,13 +68,11 @@ We need to figure out how to setup the spotify API thing, and get the keys
 
 Questions for Janata:
 
-- How does the venv work? What's its purpose? When I was just told 
-to put it, but I don't really know what it does--it also doesn't match
-his files on his repository
-- I forgot what his migrations file is for... why have it?
-- It seems like I have two apps, although I'm not sure--is this actually needed?
-ChatGPT 'told me' to do this, but I'm a bit confused on what is even going on and 
-don't know what it's used for or whether it's even necessary
 - Since I'm working with Federico, is there a specific convention he recommends to
 deal with our code? I understand gitHub is good at doing this, but it may get annoying
 to have to pull, commit, and push every single time. Is this needed? Is there a better way?
+- What method for securiing the 'secret key' is being used? 
+- Why config.get for the spotify stuff but not config like for the secret key?
+- Could we see the ini file to understand the format?
+- What is the point of import pdb? what does the module pdb do?
+- Just curious, but what does the module os do?
