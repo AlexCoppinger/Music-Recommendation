@@ -76,3 +76,4 @@ to have to pull, commit, and push every single time. Is this needed? Is there a 
 - Could we see the ini file to understand the format?
 - What is the point of import pdb? what does the module pdb do?
 - Just curious, but what does the module os do?
+- I don't really understand the point of a dev.py file. It doesn't work regardless although I'm assuming it's allowing the DEBUG to be True?

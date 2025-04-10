@@ -26,6 +26,8 @@ config_file = os.path.join(BASE_DIR, 'settings', 'config_params.ini')
 config = configparser.ConfigParser()
 config.read(config_file)
 
+print(config.sections())
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -33,10 +35,11 @@ config.read(config_file)
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config['django']['secret_key']
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
