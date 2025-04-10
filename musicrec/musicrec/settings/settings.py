@@ -9,18 +9,29 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+
+import configparser
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Specify path to our configuration file
+config_file = os.path.join(BASE_DIR, 'settings', 'config_params.ini')
+
+# Load configuration parameters from the config file
+# Use ConfigParser
+config = configparser.ConfigParser()
+config.read(config_file)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "yourfathereatsseashellsinacity"
+SECRET_KEY = config['django']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -124,5 +135,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Spotify API credentials
-SPOTIFY_CLIENT_ID = "02e9e5ab60cd40429a9c707c58d873ed"
-SPOTIFY_CLIENT_SECRET = "55a6bad92a314682913021d2c715937d"
+SPOTIFY_CLIENT_ID = config.get('spotify', 'client_id')
+SPOTIFY_CLIENT_SECRET = config.get('spotify', 'client_secret')
