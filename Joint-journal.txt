@@ -90,5 +90,16 @@ Some goals to achieve:
 - Have a running server that can run locally
 - Figure out and understand spotify authentication 
 
-From Janata 
-- from 
+From Janata: 
+Make spotify queary 
+- In termal he wrote sp.search(q="study" type='playlist', limit=25) --> The terminal responded and gave an out, this may be from the 
+spotify terminal that's specific to Janata
+- Received keys as a query against the API
+- Specific syntax p['playists']['total] --> some sort of dictionary needed 
+- in view.py: def search_playlists(request): --> want to search for name of playlist and the type of stuff that go into it 
+- add forms.py which imports froms from django 
+- make a class PlaylistSearchForm(forms.Form): --> given a form, there are outputs for the user
+- clean class validates users' requests/typing 
+- search_playists class validates the form and retrieves the result from sp.search(q=queary, type='plaulist', limit=limit)
+- loading onto the actual website, we need to specify the path so that the form renders properly
+- 
