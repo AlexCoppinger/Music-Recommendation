@@ -89,3 +89,6 @@ Some goals to achieve:
 - setup the secret client_ID mechanism 
 - Have a running server that can run locally
 - Figure out and understand spotify authentication 
+
+From Janata 
+- from 
