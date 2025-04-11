@@ -1,6 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
-
-def test_function(request):
+def test_view(request):
     return render(request, 'vibelink/test.html')
