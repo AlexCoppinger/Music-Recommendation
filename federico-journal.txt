@@ -123,6 +123,42 @@ SHELL (for running terminal)
 
 
 
+TRACKS + MODEL.py
+- 
+
+
+
+
+SHELL INTERACTION WITH Django
+
+- python manage.py SHELL
+
+(to do things inside of the terminal)
+
+
+ACCESSING PLAYLISTS?:
+from app.models import Class(ex: Track)
+playlists = Playlist.objects.get(specific)
+playlists = Playlist.objects.all() # all
+playlists = Playlist.objects.filter() # filter operation
+
+==> this will create a QUERY SET (list)
+This will be a query set of all the playlists if you do all; you can then get a specific one out of them by indexing to it
+--> then you can access parts of the playlist almost as methods with the period .
+ex: p = playlists[4]
+    p.name ==> this will give you the title
+
+You can then manually use some of the attributes to get stuff:
+
+p.track_playlists.all()[4] # 4th playlist
+
+
+
+
+
+
+
+
 
 
 
