@@ -155,9 +155,11 @@ p.track_playlists.all()[4] # 4th playlist
 
 
 
+WEEK 4
 
 
-
+pdb.set_trace()
+- can be placed where you want code to stop and just return intformation that you can just access within the terminal
 
 
 
