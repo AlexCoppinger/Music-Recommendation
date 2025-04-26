@@ -1,6 +1,8 @@
 from django.urls import path
-from . import views
+from .views import search_spotify_playlists
+
+app_name = 'vibelink'
 
 urlpatterns = [
-    path('', views.search_spotify_playlists, name='search_playlists')
+    path('', search_spotify_playlists, name='search_playlists')
 ]

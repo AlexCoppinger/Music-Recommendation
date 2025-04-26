@@ -103,3 +103,31 @@ spotify terminal that's specific to Janata
 - search_playists class validates the form and retrieves the result from sp.search(q=queary, type='plaulist', limit=limit)
 - loading onto the actual website, we need to specify the path so that the form renders properly
 - 
+
+
+- rows are entries (objects)
+- columns 
+
+- Amazon web services (including )
+
+- You can download (DB) an app to read through SQLite stuff
+
+- Created in models.py methods that store
+- created sql thing through models
+- do migrations (which automatically stores stuff)
+- 
+
+- for HTML we will use bootstraps --> which is a CSS thing that helps design the website
+- HTML is our top-level template --> but then, 
+
+- needs to create endpoint in url ()
+
+- What exactly is context?
+- What exactly is namespace?
+
+
+
+
+it says it's up to date
+I haven't done much today
+If possible could we do it afterwards?
