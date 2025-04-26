@@ -10,7 +10,30 @@ venv = source venv/bin/activate
     "DJ Smervin" (unofficial) aka "VibeLink" (official)
 
 
-# WEEK 1
+# WEEK 2
+ACHIEVED:
+- alex figured out how to setup the secret client_ID mechanism (to keep it hidden) 
+- We finally have a running server that can run locally, with the html implemented correctly
+    - will work on actual html page later (not current priority)
+- We figured out spotify authentication, but not completely; next week need to figure out how to connect to spotify
+
+
+
+
+
+# WEEK 3
+CURRENT GOAL:
+- Figure out how to gather data from spotify, and find out how and where to store it into a database for later usage
+- We want to have enough playlist data for later training and testing for our machine learning model
+
+
+Server finally running with html linked correclty to views.py
+Need to work on gathering data with spotify API using spotipy:
+    - need to work on playlist searching function inside spotify.py
+
+
+
+
 
 
 
