@@ -1,3 +1,22 @@
+GitHub merge stuff:
+git checkout your-branch
+git fetch origin
+git merge origin/main   # Update your branch first
+# (fix conflicts if needed)
+
+git checkout main
+git pull origin main    # Make sure main is fresh
+git merge your-branch
+git push origin main    # Push the updated main
+
+git checkout your-branch #To go back to your branch
+
+When saving:
+
+git add .
+git commit -m "Built the login page form"
+git push origin your-branch-name
+
 # Week 1
 
 The name of this algorithm is VibeLink
