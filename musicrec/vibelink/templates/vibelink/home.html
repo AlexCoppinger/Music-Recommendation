@@ -1,0 +1,22 @@
+<h1>Homepage of VibeLink</h1>
+<a href="{% url 'vibelink:search_playlists' %}" class="button">Go to Search Page</a>
+<style>
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: rgb(5, 2, 2);
+        background-color: #00ffccd3; 
+        text-decoration: none;
+        border: 3px dashed #ff5733;
+        border-radius: 15px;
+        box-shadow: 0 0 10px #ff3333, 0 0 20px #11007c; /* Glowing effect */
+        animation: pulse 0.01s infinite;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+        background-color: #b3650062; 
+    }
+</style>

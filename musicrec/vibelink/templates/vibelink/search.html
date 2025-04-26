@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Search for Playlists</h1>
-    <form method="POST" action="{% url 'search_playlists' %}">
+    <form method="GET" action="{% url 'vibelink:search_playlists' %}"> 
         {% csrf_token %}
         <input type="text" name="query" placeholder="Enter playlist name" required>
         <button type="submit">Search</button>
