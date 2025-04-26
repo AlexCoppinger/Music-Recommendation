@@ -19,8 +19,8 @@ def search_playlists(query):
     Returns:
         list: A list of playlist names matching the query.
     """
+    print("search_playlists called")
     results = sp.search(q=query, type='playlist', limit=10)
-    print(results)
     playlists = results['playlists']['items']
     return [playlist['name'] for playlist in playlists]
 

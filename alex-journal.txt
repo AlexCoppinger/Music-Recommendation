@@ -78,3 +78,35 @@ to have to pull, commit, and push every single time. Is this needed? Is there a 
 - Just curious, but what does the module os do?
 - I don't really understand the point of a dev.py file. It doesn't work regardless although I'm assuming it's allowing the DEBUG to be True?
 - Why did db.sqlite3 pop up in larger musicrec folder?
+
+# Week 3
+setting up a django shell
+
+- python manage.py shell --> for running the shell
+- when running a shell, it executes 
+- pip freeze > requirements.txt
+- > --> dumps into file
+- >> appends the things
+
+In terms of content: 
+(we want to clean up views and fetching and spotify API, and then how to store and work in our local database)
+
+- If we're not doing a post request (putting something on the webstie)
+- We're taking stuff (from the get request)
+- need to create a forms.py
+- form consist of various fields
+- different input boxes, or dropdown menues that give options
+- fields for inputting things 
+- clean method makes the field clean so that it's nicely formatted
+- Could do a response
+
+- in html there is namespace to end-point (which is in the urls.py) --> which is 
+- {} --> in HTML is django template stuff 
+
+- Haven't dealt with database
+- Haven't dealt with the limits --> You can go to the next page and loop for a long time 
+
+We can use user URI as a feature 
+
+Django has 'bulk' update stuff
+

@@ -7,18 +7,10 @@
 </head>
 <body>
     <h1>Search for Playlists</h1>
-    <form method="GET" action="{search_playlists}">
+    <form method="POST" action="{% url 'search_playlists' %}">
+        {% csrf_token %}
         <input type="text" name="query" placeholder="Enter playlist name" required>
         <button type="submit">Search</button>
     </form>
-
-    {% if playlists %}
-        <h2>Search Results:</h2>
-        <ul>
-            {% for playlist in playlists %}
-                <li>{{ playlist }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
 </body>
 </html>

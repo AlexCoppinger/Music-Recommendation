@@ -2,6 +2,7 @@ from django.shortcuts import render
 from .spotify import search_playlists
 
 def search_spotify_playlists(request):
+    print("search_spotify_playlists called")
     query = request.GET.get('query', '')  # Get the search query from the request
     playlists = []  # Default empty list for playlists
     if query:  # If a query is provided
