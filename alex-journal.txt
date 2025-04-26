@@ -1,4 +1,4 @@
-GitHub merge stuff:
+How to merge your branch on github:
 git checkout your-branch
 git fetch origin
 git merge origin/main   # Update your branch first
@@ -11,7 +11,7 @@ git push origin main    # Push the updated main
 
 git checkout your-branch #To go back to your branch
 
-When saving:
+When saving on your branch:
 
 git add .
 git commit -m "Built the login page form"
