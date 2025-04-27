@@ -1,6 +1,5 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
-
 from django.conf import settings
 
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
@@ -23,6 +22,11 @@ def search_playlists(query):
     results = sp.search(q=query, type='playlist', limit=10)
     playlists = results['playlists']['items']
     return [playlist['name'] for playlist in playlists]
+
+# The syntax for this is: you will be returned a variable with all the data:
+# To access it you have (imagining it goes into the variable playlists) playlists[][]
+# Now, you can open playlists using playlists[n]['type'] where n is the number of the playlist in the list
+# and to access the list of type, you can enter playlists[n].keys()
 
 
 # We want our Django app to:
