@@ -129,3 +129,63 @@ We can use user URI as a feature
 
 Django has 'bulk' update stuff
 
+Week 5 
+- 671 071 2698
+- In views there's a 'select_purpose' function --> that gives the purpose of the search 
+- in spotify.py add a import_items --> makes sure that if you have a search, you don't have to do it again 
+- would want to delete items from before if you make a new search so that the duplicates aren't needed (although for us this might not be useful)
+- In models, we have something that records the rating of each track 
+- get_playlist_track --> To get playlist for a track... and then create a playlist to put music into it
+- sp.auth --> to get a user's ID credentials and stuff 
+- dir(request.user)
+- in models.py --> Add specific user (abstract user) --> in class User(AbstractUser)
+- You user @ login_required for registration --> each registration is going to require a specific type of thing
+- you do the login thing in models, spotify, ... --> Don't forget all of the imports in views.py 
+- in forms.py, we have a custom user registration form (CustomUserCreationForm) which comes from a package called UserCreationForm
+- potentially in the future autogenerate a username, and authenticate through spotify 
+- python manage.py makemigrations --> to create migrations
+- What is a decorator? (which is the login_required thing)
+- Using a seperate spotify model isn't maybe the best. A Django user is maybe not the best idea 
+
+Thinking out loud about what I want to do for the machine learning algorithm:
+We want to use the correlation between playlists to tell us whether songs are related or not?
+
+So basically, every song is related to every other song based on how many playlists it has in common with it
+So in our dataset we need every song and every single playlist it belongs in. Is there a command that does this?
+Let's say we load 100 random tracks, we need to be able to tell what playlists its in, etc. 
+
+What we could also do is find a subsection of playlists, and analyze them for each song. 
+- If a playlist contains a song, we add a tick to it with that token 
+- At the end, we should have a list of every song that within those playlists, and all the playlists it's in
+- So within our database of songs, we'd have each song and each playlist that it is a part of, and we can check 
+whether each song has playlists in common with other songs 
+
+- Later on, we could go multiple layers deep, finding the correlation of each song to each other song. If it is 1 
+playlist away, then there's a lower coefficient, etc. This could, however, go on infinitely, and it may be useful to have 
+a limit (maybe the as I've said before, could be logarithmic, where the further it is, the less it matters, but the 
+closer it is, the more it matters)
+- We would tally each one of these against each other to find the ideal song. And maybe the algorithm could update each
+layer for 1 song. If it can find one and the songs are within a coefficient, great. Otherwise, it can update until we find one. 
+
+
+We can create this relatedness between each song. The thing is attaching it to a coefficient that the user rates is interesting.
+How do we make sure that each time a user rates a song, it will update the recommendation? We could try multiplying it by the weights
+of the songs and each related--if it's, let's say, larger than 5, it's positive, and less, negative. However, I'm worried about
+certain songs gaining a huge amount of traction, and then they would be hard to divide. There almost needs to be a way 
+to completely remove a song. I guess the person could maybe choose whether to add it to the playlist, and if it's not added,
+then it's gone, and if it is, then it increases the weights. 
+
+
+$\sigma$
+
+Find a markdown plugin
+
+
+I guess this is the most feasable version of our model. A proof of concept. The only thing is, 
+
+# Week 6
+
+querySelector in javascript --> goes through an array and .forEach achieves to specific thing
+
+
+

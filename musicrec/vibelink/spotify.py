@@ -23,6 +23,21 @@ def search_playlists(query):
     playlists = results['playlists']['items']
     return [playlist['name'] for playlist in playlists]
 
+def search_tracks(query):
+
+    print("search_tracks called") # For seeing
+    results = sp.search(q=query, type='track', limit=10)
+    print(results) # For seeing
+    tracks = results['tracks']['items']
+    
+    if not tracks:
+        print("No tracks found") # just in case this doesn't work
+        return []
+    
+
+    return [track['name'] for track in tracks]
+
+
 # The syntax for this is: you will be returned a variable with all the data:
 # To access it you have (imagining it goes into the variable playlists) playlists[][]
 # Now, you can open playlists using playlists[n]['type'] where n is the number of the playlist in the list

@@ -150,3 +150,15 @@ spotify terminal that's specific to Janata
 it says it's up to date
 I haven't done much today
 If possible could we do it afterwards?
+
+
+Arshin is the name of the other person
+
+We could just store the playlist name and track, and then delete them (to save space on computation). Then when recommending, we could pull it up
+Does not actually pull until you actually pull the values--
+
+pdb.set_trace() is for setting a break point 
+
+id__in --> Why 2 underscores
+
+
