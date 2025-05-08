@@ -155,12 +155,28 @@ p.track_playlists.all()[4] # 4th playlist
 
 
 
+
 WEEK 4
 
 
 pdb.set_trace()
 - can be placed where you want code to stop and just return intformation that you can just access within the terminal
 
+
+IDEAS:
+- need user to have spotify account
+- control player via API
+- stop and rate the song ==> affects how the playback is going
+
+
+
+WEEK 5 and 6
+
+have it filter by whether a track already exists and then present the remaining ones in the generated playlist
+
+
+"Even gods have bad days"
+-- Alexis
 
 
 
