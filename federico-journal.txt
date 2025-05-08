@@ -32,8 +32,148 @@ Need to work on gathering data with spotify API using spotipy:
     - need to work on playlist searching function inside spotify.py
 
 
+Monday(04/14)
+
+PlaylistSearch Notes:
+    - you need forms in the forms.py file, in order to include the different fields that you might want (e.g. search for playlists, sort by, what to include)
+    - each field has some default rendering once you render in views.py
+    - 
+
+Cleanup Function within PLaylistSearch class:
+    -  checks for clean forms, to send back indicators of errors
+
+
+Django Render:
+    - takes request object coming in, and you can specify a template that you want to use (which is what you use to render the request; ex: search.html)
+        - you can save templates in the app itself inside of a template folder, that has another folder inside of it that is also called by the app
+        -  this can also a take a dictionary that includes variables that you want to use (it is a third possible parameter)
+            - it gets sent to the django rendering engine and it will use it to place content correctly
+
+    this is also why we have a form inside the html that has a POST method inside of it for users to interact with:
+
+Inside of views.py there is also contenxt that can be added within the search playlist function, that is what is pushed inside of the render function
+as the third parameter, to fill in the variables for the HTML
+
+
+
+
+# INSIDE OF THE HTML
+
+CSRF_TOKEN:
+    - protects POSTS requests from something coming in from a fake site, so it blocks them from doing a POST request to your server (because you don't
+    want a POST request to manipulate anything in your database)
+    - it has {% CSRF_TOKEN %} ==> this notation shows that it is Django
+
+FORMS:
+    - uses doubel curly braces to refer to a variable in order to render it "{{"
+    + a buttone is added
+
+
+
+NOTE ABOUT SPOTIFY INFORMATION FETCHING:
+    - need to create a loop in order to get spotify data and then use the given url to go on to the next batch of data, since it doesn't like
+    returning everything at once
+
+
+HTML NOTES:
+- html hierarchy
+- in the main content section (<main class = "container...) you'll haev a {% block content}{%endblock%}
+==> this content section will be referenced in another html file where the information there will overwrite the other content block
+- the base.html will be to create a sort of skeleton for things, and then index.html will extend base.html and have the actual content (so index
+will be what has to be rendered)
+
+
+
+DATABASE STUFF:
+
+    - work inside the models.py file to create models for playlists or tracks finding using Django's models class (as models.Model)
+    - inside the models.py make a class for Playlist(models.Model) and Track(models.Model)
+    - these require a foreign key to link between track and playlist classes
+
+    - Linking Table: where you store foreign keys that link both into the playlists and into each tracks
+        - then have additional fields within this linking table in order to store this association (essentially they are just IDs)
+    ==> this can be made as TrackXPlaylist(models.Model):
+        - within this is where you can create an order variable that takes in the foreign keys?
+
+==> all of this so far is just class models, but they have to be instantiated somewhere
+(in the view don't forget to import the models)
+
+MIGRATIONS:
+    python manage.py makemigrations
+    - that will create a migration file inside of the migrations folder of the app (this will automatically instantiate a migration)
+- then you need to apply the migration:
+    ython mangage.py migrate
+        - this will then store this information within the default database (db.sqlite3) which is defined inside of settings.py
+            - you can then access the databese from an app like DBeaver (just go on it and open the db.sqlite3 file)
+            - once you do yo will find the different tables that we have to use
+                - each one has its own primary key (ID) and other information (like the playlist one has e.g. description...)
+
+    ==> how to now put stuff inside of the database?
+    - go to views.py to the search function (e.g. search playlists) which already got playlists
+    - (remember that you can also edit the fields that get put on the databse from the models, like the part that says "name = models.CharField...)
+
+
+For database:
+- might need to use AWS
+
+
+SHELL (for running terminal)
+- python manage.py SHELL
+
+
+
+
+TRACKS + MODEL.py
+- 
+
+
+
+
+SHELL INTERACTION WITH Django
+
+- python manage.py SHELL
+
+(to do things inside of the terminal)
+
+
+ACCESSING PLAYLISTS?:
+from app.models import Class(ex: Track)
+playlists = Playlist.objects.get(specific)
+playlists = Playlist.objects.all() # all
+playlists = Playlist.objects.filter() # filter operation
+
+==> this will create a QUERY SET (list)
+This will be a query set of all the playlists if you do all; you can then get a specific one out of them by indexing to it
+--> then you can access parts of the playlist almost as methods with the period .
+ex: p = playlists[4]
+    p.name ==> this will give you the title
+
+You can then manually use some of the attributes to get stuff:
+
+p.track_playlists.all()[4] # 4th playlist
 
 
 
 
 
+WEEK 4
+
+
+pdb.set_trace()
+- can be placed where you want code to stop and just return intformation that you can just access within the terminal
+
+
+IDEAS:
+- need user to have spotify account
+- control player via API
+- stop and rate the song ==> affects how the playback is going
+
+
+
+WEEK 5 and 6
+
+have it filter by whether a track already exists and then present the remaining ones in the generated playlist
+
+
+"Even gods have bad days"
+-- Alexis
