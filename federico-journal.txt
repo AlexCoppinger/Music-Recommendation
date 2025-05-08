@@ -177,3 +177,20 @@ have it filter by whether a track already exists and then present the remaining 
 
 "Even gods have bad days"
 -- Alexis
+
+
+
+SIMILARITY CONCEPT:
+- correlation between playlists
+    - finding how many playlists a track has in common with another (loop over)
+
+- if bad rating:
+    - search through playlists that that track is NOT part of and generate a random next track
+
+
+
+playlist
+- track 1
+...
+
+
