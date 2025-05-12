@@ -194,3 +194,48 @@ playlist
 ...
 
 
+WEEK 7
+Matrices?
+
+Caching:
+- by session, use in-memory cache
+    - django has something like this (behaves like a dictionary) (local disk)
+
+DJANGO CACHING:
+- indicate in memory + 
+
+
+Week 8
+
+# MODEL - tables to store track coefficients that are based on user ratings + recommendation algorithm
+
+class TrackCoefficient(models.Model):
+    # store track coefficeints based on rating
+    track = models.ForeignKey('Track', on_delete = models.CASCADE)
+    algorithm = models.ForeignKey('Algorithm', on_delete = models.CASCADE)
+    user = models.ForeignKey('user', on_delete = models.CASCADE)
+    coefficient = models.FloatField(default=0.0)
+    created_at...
+    updated_at...
+
+    class Meta:
+        unique_together = ('track', 'algorithm', 'user')
+        ordering = ['-coefficient']
+
+
+
+
+# MODEL - for algorithm, to reference in the table store above
+
+class Algorithm(models.Model):
+    name = models.CharField(max_length = 255, unique = True)
+    description = models.TextField(blank=True)
+    algorithm_type = models.CharField(max_length = 255, blank=True)
+
+    callback = models.CharField(max_length=255, blank=true)
+
+
+
+==> implement "genre" spotify concept for the playlist search
+
+
