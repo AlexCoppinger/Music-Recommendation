@@ -239,3 +239,29 @@ class Algorithm(models.Model):
 ==> implement "genre" spotify concept for the playlist search
 
 
+make algorithm as a version of Janata's 
+populate_candidate_playlist
+
+- first use his thing to get the most popular FIRST track
+- 
+
+
+
+THE RATING PART:
+- go in the views to rate_track(request)
+    - in here add some WEIGHT UPDATING
+
+# update the track weights in the TrackCoefficient model
+# Fetch track coefficient instance or create a new one
+tc = TrackCoefficient.objects.update_or_create(
+    user=request.user,
+    track=trackrating.track,
+    algorithm='',
+)
+
+# In the track rating class put the method for coefficient UPDATING
+
+def update_coefficient(self, algorithm_name):
+    callback = Algorithm.objects.get(name=algorithm_name).
+
+
