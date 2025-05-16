@@ -3,14 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Playlists</title>
+    <title>Search Music</title>
 </head>
 <body>
-    <h1>Search for Playlists</h1>
-    <form method="GET" action="{% url 'vibelink:search_playlists' %}"> 
-        {% csrf_token %}
-        <input type="text" name="query" placeholder="Enter playlist name" required>
-        <button type="submit">Search</button>
-    </form>
+    <div class="search-container">
+        <!-- Playlist Search Section -->
+        <div class="playlist-search">
+            <h2>Search for Playlists</h2>
+            <form method="GET" action="{% url 'vibelink:search_playlists' %}">
+                {% csrf_token %}
+                <input type="text" name="query" placeholder="Enter playlist name" required>
+                <button type="submit">Search Playlists</button>
+            </form>
+        </div>
+
+        <!-- Track Search Section -->
+        <div class="track-search">
+            <h2>Search for Tracks</h2>
+            <form method="GET" action="{% url 'vibelink:search_tracks' %}">
+                {% csrf_token %}
+                <input type="text" name="query" placeholder="Enter track name" required>
+                <button type="submit">Search Tracks</button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        {% if tracks %}
+            <div class="track-results">
+                <h3>Tracks Found:</h3>
+                <ul>
+                {% for track in tracks %}
+                    <li>{{ track.name }} - {{ track.artist }} ({{ track.album }})</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if playlists %}
+            <div class="playlist-results">
+                <h3>Playlists Found:</h3>
+                <ul>
+                {% for playlist in playlists %}
+                    <li>{{ playlist.name }} by {{ playlist.owner }} ({{ playlist.track_count }} tracks)</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>

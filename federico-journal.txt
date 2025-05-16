@@ -265,3 +265,9 @@ def update_coefficient(self, algorithm_name):
     callback = Algorithm.objects.get(name=algorithm_name).
 
 
+
+WEEK 7:
+- finally completed the database architecture, track/playlist retrieval is all in place
+and it's all finally viewable on DBeaver
+
+
