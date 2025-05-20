@@ -269,5 +269,27 @@ def update_coefficient(self, algorithm_name):
 WEEK 7:
 - finally completed the database architecture, track/playlist retrieval is all in place
 and it's all finally viewable on DBeaver
+- after each playlist/track search, the tracks/playlists are collected and stored into the database
+
+
+WEEK 8:
+
+- when it comes to scaling parameters, you want to have a different one depending on the algorithm that we
+are working with, so instead of hard-coding the scaling into the algorithm function itself, 
+go in the class and make a *DICTIONARY* of scaling factors based on the algorithm_type
+
+NOTE: 
+scaling_factor = lambda x: 1 / (1+(1/(1+x)))
+(lambda is function on the fly)
+
+
+- on specific runs where the rating is sub 3, still try to get the most popular track by coefficient and then
+when you hit competitive tracks, get a random
+
+
+
+
+
+
 
 
