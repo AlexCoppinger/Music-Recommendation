@@ -94,6 +94,8 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'vibelink.User' # Custom user model
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -137,6 +139,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# Spotify API credentials
+# Spotify API credentials from config file
 SPOTIFY_CLIENT_ID = config.get('spotify', 'client_id')
 SPOTIFY_CLIENT_SECRET = config.get('spotify', 'client_secret')
+SPOTIFY_REDIRECT_URI = config.get('spotify', 'redirect_uri')
+SPOTIFY_SCOPE = config.get('spotify', 'scope')
+
+OAUTH_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize'
+OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'

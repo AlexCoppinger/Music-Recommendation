@@ -24,3 +24,9 @@ def track_search_view(request):
 
 def home(request):
     return render(request, 'vibelink/home.html')
+
+def register(request):
+    return render(request, 'vibelink/register.html')
+
+def login(request):
+    return render(request, 'vibelink/login.html')

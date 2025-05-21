@@ -11,6 +11,9 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
                      ))
 
 
+# This section is for searching for playlists and tracks
+# and saving them to the database
+
 def search_playlists(query, limit=25):
     offset = 0
     saved_playlists = []
@@ -112,20 +115,10 @@ def search_tracks(query, limit=25):
 
 
 
-# The syntax for this is: you will be returned a variable with all the data:
-# To access it you have (imagining it goes into the variable playlists) playlists[][]
-# Now, you can open playlists using playlists[n]['type'] where n is the number of the playlist in the list
-# and to access the list of type, you can enter playlists[n].keys()
+# This section will be to login and authenticate the user
+# I want to authenticate a user through spotify, then create a user in the database that will have their associated
+# algorithm and their spotify id
+# in the future we could use their spotify id to access their playlists and tracks and play a song from their spotify app 
 
 
-# We want our Django app to:
-# Authenticate itself with Spotify using the Client Credentials Flow
-# Use the Spotify API to request public data
-# Return that data via Django views or use it inside your app (on the html page)
-
-
-# For this module:
-# We use this spotipy to wrap the Spotify API in Python functions
-# Use this module to organize the API logic
-# Django views to interact with users and return data
 

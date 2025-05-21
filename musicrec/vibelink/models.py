@@ -1,8 +1,28 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
+class User(AbstractUser):
+    display_name = models.CharField(max_length=255)
+    spotify_id = models.CharField(max_length=255)  # Unique identifier for the user in Spotify
+    uri = models.CharField(max_length=255, blank=True, null=True)  # URI for the user in Spotify
+    spotify_access_token = models.CharField(max_length=255, blank=True, null=True)
+    spotify_refresh_token = models.CharField(max_length=255, blank=True, null=True)
 
-class User(models.Model):
-    display_name = models.CharField(max_length=255, blank=True, default='', null=True)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_set',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups',
+    )
+
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_set',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
 
 class Track(models.Model):
     """
