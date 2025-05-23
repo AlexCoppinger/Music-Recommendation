@@ -287,6 +287,14 @@ scaling_factor = lambda x: 1 / (1+(1/(1+x)))
 when you hit competitive tracks, get a random
 
 
++
+
+For tracks that haven't been given a coefficient yet:
+try:
+    coefficient = tc_qs.get... (get fails when it doesnt exist)
+
+except:
+    coefficient = 0.0
 
 
 
