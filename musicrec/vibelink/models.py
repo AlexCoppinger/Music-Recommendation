@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     display_name = models.CharField(max_length=255)
     spotify_id = models.CharField(max_length=255)  # Unique identifier for the user in Spotify
+    profile_image = models.URLField(blank=True, null=True)  # URL to the user's profile image in Spotify
     uri = models.CharField(max_length=255, blank=True, null=True)  # URI for the user in Spotify
     spotify_access_token = models.CharField(max_length=255, blank=True, null=True)
     spotify_refresh_token = models.CharField(max_length=255, blank=True, null=True)

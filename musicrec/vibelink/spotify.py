@@ -162,6 +162,7 @@ def get_spotify_oauth():
         client_secret=settings.SPOTIFY_CLIENT_SECRET,
         redirect_uri=settings.SPOTIFY_REDIRECT_URI,
         scope=settings.SPOTIFY_SCOPE,
+        show_dialog=True,  # Show the dialog for user consent
     )
 
 def get_spotify_client_credentials():

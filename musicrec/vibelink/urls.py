@@ -8,8 +8,7 @@ urlpatterns = [
     path('search/tracks/', views.track_search_view, name='search_tracks'),  # Updated path
     path('', views.home, name='home'),
     # Stuff for authentication:
-    path('register/', views.register, name='register'),
-    path('login', views.spotify_login, name='login'),
-    path('vibelink/callback/', views.spotify_callback, name='callback'),
-   # path('profile/', views.show_profile, name='profile'),
+    path('spotify/login/', views.spotify_login, name='login'),
+    path('spotify/logout/', views.spotify_logout, name='logout'),
+    path('spotify/callback/', views.spotify_callback, name='callback'),
 ]

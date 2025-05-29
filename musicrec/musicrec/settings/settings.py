@@ -64,6 +64,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+] # Default authentication backend
+
 ROOT_URLCONF = "musicrec.urls"
 
 TEMPLATES = [
@@ -147,3 +151,6 @@ SPOTIFY_SCOPE = config.get('spotify', 'scope')
 
 OAUTH_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize'
 OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
+
+# login URL
+LOGIN_URL = '/spotify/login/' # This is because we automatically trigger oauth
