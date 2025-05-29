@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register with Spotify - VibeLink</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            padding: 40px;
+            margin: 40px 0;
+            background-color: #181818;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        h1 {
+            color: #1DB954;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .spotify-button {
+            display: inline-block;
+            background-color: #1DB954;
+            color: #000000;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.1em;
+            margin: 20px 0;
+            transition: transform 0.2s, background-color 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .spotify-button:hover {
+            background-color: #1ed760;
+            transform: scale(1.05);
+        }
+        .info-block {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-block h2 {
+            color: #1DB954;
+            margin-top: 0;
+        }
+        .info-block ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .info-block li {
+            margin-bottom: 8px;
+        }
+        .footer {
+            font-size: 0.9em;
+            margin-top: 20px;
+            color: #b3b3b3;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .success {
+            background-color: rgba(29, 185, 84, 0.3);
+            border-left: 4px solid #1DB954;
+        }
+        .error {
+            background-color: rgba(255, 55, 55, 0.3);
+            border-left: 4px solid #ff3737;
+        }
+        .home-link {
+            color: #1DB954;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .home-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <!-- You can add your logo here -->
+            <h1>VibeLink</h1>
+        </div>
+        
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <h2>Connect Your Spotify Account</h2>
+        <p>Join VibeLink by connecting with your Spotify account to unlock personalized music recommendations.</p>
+        
+        <a href="{% url 'vibelink:login' %}" class="spotify-button">
+            Connect with Spotify
+        </a>
+        
+        <div class="info-block">
+            <h2>What we access:</h2>
+            <ul>
+                <li>Your Spotify username and profile info</li>
+                <li>Ability to read your top artists and tracks</li>
+                <li>Permission to create and modify playlists</li>
+            </ul>
+            <p>You can revoke access anytime from your Spotify account settings.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Already registered? <a href="{% url 'vibelink:login' %}" class="home-link">Log in instead</a></p>
+            <p>Or <a href="{% url 'vibelink:home' %}" class="home-link">return to home page</a></p>
+        </div>
+    </div>
+</body>
+</html>

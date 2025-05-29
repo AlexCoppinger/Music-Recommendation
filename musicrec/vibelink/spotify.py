@@ -1,15 +1,52 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from .models import User
 from django.conf import settings
 from .models import Track
 from .models import Playlist
 
+import datetime
 
+## This is the code for the Spotify API integration but it will probably get 
+## moved to the functions below in the future
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
                      client_id=settings.SPOTIFY_CLIENT_ID, 
                      client_secret=settings.SPOTIFY_CLIENT_SECRET
                      ))
+## I'll have to figure out how to get the auth manager to work with this
 
+
+# def get_spotify_oauth():
+#     """
+#     Get a Spotify OAuth object for user authentication.
+#     This is used for user-specific actions like modifying playlists.
+#     """
+#     return SpotifyOAuth(
+#         client_id=settings.SPOTIFY_CLIENT_ID,
+#         client_secret=settings.SPOTIFY_CLIENT_SECRET,
+#         redirect_uri=settings.SPOTIFY_REDIRECT_URI,
+#         scope=settings.SPOTIFY_SCOPE,
+#     )
+
+
+# def get_spotify_client_credentials():
+#     """
+#     Get a Spotify client using client credentials flow (no user authentication).
+#     Useful for general Spotify API queries that don't require user-specific data.
+#     """
+#     client_credentials_manager = SpotifyClientCredentials(
+#         client_id=settings.SPOTIFY_CLIENT_ID,
+#         client_secret=settings.SPOTIFY_CLIENT_SECRET
+#     )
+#     return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+
+
+
+
+# This section is for searching for playlists and tracks
+# and saving them to the database
 
 def search_playlists(query, limit=25):
     offset = 0
@@ -112,20 +149,43 @@ def search_tracks(query, limit=25):
 
 
 
-# The syntax for this is: you will be returned a variable with all the data:
-# To access it you have (imagining it goes into the variable playlists) playlists[][]
-# Now, you can open playlists using playlists[n]['type'] where n is the number of the playlist in the list
-# and to access the list of type, you can enter playlists[n].keys()
 
 
-# We want our Django app to:
-# Authenticate itself with Spotify using the Client Credentials Flow
-# Use the Spotify API to request public data
-# Return that data via Django views or use it inside your app (on the html page)
+# This section will be to login and authenticate the user
+# I want to authenticate a user through spotify, then create a user in the database that will have their associated
+# algorithm and their spotify id
+# in the future we could use their spotify id to access their playlists and tracks and play a song from their spotify app 
 
+def get_spotify_oauth():
+    return SpotifyOAuth(
+        client_id=settings.SPOTIFY_CLIENT_ID,
+        client_secret=settings.SPOTIFY_CLIENT_SECRET,
+        redirect_uri=settings.SPOTIFY_REDIRECT_URI,
+        scope=settings.SPOTIFY_SCOPE,
+    )
 
-# For this module:
-# We use this spotipy to wrap the Spotify API in Python functions
-# Use this module to organize the API logic
-# Django views to interact with users and return data
+def get_spotify_client_credentials():
+    client_credentials_manager = SpotifyClientCredentials(
+        client_id=settings.SPOTIFY_CLIENT_ID,
+        client_secret=settings.SPOTIFY_CLIENT_SECRET
+    )
+    return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+
+def get_spotify_client(request=None):
+    if request and 'spotify_token_info' in request.session:
+        token_info = request.session['spotify_token_info']
+        now = int(datetime.datetime.now().timestamp())
+        is_expired = token_info.get('expires_at', 0) - now < 60
+
+        if is_expired:
+            sp_oauth = get_spotify_oauth()
+            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+            request.session['spotify_token_info'] = token_info
+
+        return spotipy.Spotify(auth=token_info['access_token'])
+
+    return get_spotify_client_credentials()
+    
+# Done with user authentication and login
+
 

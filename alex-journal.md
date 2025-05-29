@@ -187,5 +187,16 @@ I guess this is the most feasable version of our model. A proof of concept. The 
 
 querySelector in javascript --> goes through an array and .forEach achieves to specific thing
 
+# Week 8 
+AUTH_USER_MODEL = "pwap.User"
 
+That's funny
+
+variable = models.variable.first() ==> To find the first in the variable
+
+TrackXPlaylist.object.filter(track=track, playlist__playlistsearchresult__query) 
+
+
+It's also proportional to infinity, and not to a 
+maximum value
 
