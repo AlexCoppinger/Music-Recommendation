@@ -1,1 +1,80 @@
-<h1>Login Page</h1>
+<!-- templates/vibelink/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeLink - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #1DB954;
+            margin-bottom: 30px;
+        }
+        .spotify-button {
+            display: inline-block;
+            background-color: #1DB954;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .spotify-button:hover {
+            background-color: #1ed760;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .error {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Welcome to VibeLink</h1>
+        
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="{% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <p>Connect with your Spotify account to get personalized music recommendations.</p>
+        
+        <a href="{% url 'vibelink:register' %}" class="spotify-button">
+            Login with Spotify
+        </a>
+        
+        <p style="margin-top: 30px; font-size: 14px; color: #666;">
+            By logging in, you agree to share your Spotify data with VibeLink.
+        </p>
+    </div>
+</body>
+</html>
