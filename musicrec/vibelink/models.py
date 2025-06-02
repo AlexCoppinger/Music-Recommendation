@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
+
 class User(AbstractUser):
     display_name = models.CharField(max_length=255)
     spotify_id = models.CharField(max_length=255)  # Unique identifier for the user in Spotify
@@ -51,3 +53,17 @@ class Playlist(models.Model):
     def __str__(self):
         return self.name
     
+
+# this model represents the link between tracks and playlists
+class TrackPlaylist(models.Model):
+    """
+    Model representing the many-to-many relationship between tracks and playlists.
+    """
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('track', 'playlist')
+
+    def __str__(self):
+        return f"{self.track.name} in {self.playlist.name}"

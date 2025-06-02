@@ -129,3 +129,16 @@ def show_profile(request):
     sp = get_spotify_client(request)
     me = sp.current_user()
     return JsonResponse(me)
+
+
+# view for displaying playlist tracks
+def playlist_tracks_view(request, playlist_id):
+    try:
+        playlist = Playlist.objects.get(spotify_id=playlist_id)
+        tracks = get_playlist_tracks(playlist_id)
+        return render(request, 'vibelink/playlist_tracks.html', {
+            'playlist': playlist,
+            'tracks': tracks
+        })
+    except Exception as e:
+        return render(request, 'vibelink/search.html', {'error': str(e)})

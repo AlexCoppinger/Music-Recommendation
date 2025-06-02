@@ -4,8 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .models import User
 from django.conf import settings
-from .models import Track
-from .models import Playlist
+from .models import Track, Playlist, User, TrackPlaylist
 
 import datetime
 
@@ -190,3 +189,68 @@ def get_spotify_client(request=None):
 # Done with user authentication and login
 
 
+# Method to fecth tracks from a playlist
+def get_playlist_tracks(playlist_id):
+    """
+    Fetch all tracks from a specific playlist and save them to the database.
+    """
+    saved_tracks = []
+    offset = 0
+    
+    while True:
+        try:
+            results = sp.playlist_tracks(
+                playlist_id,
+                offset=offset,
+                fields='items(track(id,name,artists,album,duration_ms,uri,preview_url))'
+            )
+            
+            if not results['items']:
+                break
+
+            for item in results['items']:
+                track = item.get('track')
+                if track is None:
+                    continue
+
+                try:
+                    # Make sure all track data is properly extracted
+                    track_data = {
+                        'spotify_id': track.get('id', 'Unknown'),
+                        'name': track.get('name', 'Unknown'),
+                        'artist': track['artists'][0]['name'] if track.get('artists') and track['artists'] else 'Unknown',
+                        'album': track['album'].get('name', 'Unknown') if track.get('album') else 'Unknown',
+                        'duration_ms': track.get('duration_ms', 0),
+                        'uri': track.get('uri', 'Unknown'),
+                        'preview_url': track.get('preview_url'),
+                    }
+
+                    # Save track first
+                    track_obj, created = Track.objects.get_or_create(
+                        spotify_id=track_data['spotify_id'],
+                        defaults=track_data
+                    )
+
+                    # Get playlist and create relationship
+                    playlist = Playlist.objects.get(spotify_id=playlist_id)
+                    TrackPlaylist.objects.get_or_create(
+                        track=track_obj,
+                        playlist=playlist
+                    )
+
+                    saved_tracks.append(track_obj)
+                    print(f"Saved track: {track_data['name']} to playlist: {playlist.name}")
+
+                except Exception as e:
+                    print(f"Error saving track: {e}")
+                    continue
+
+            offset += len(results['items'])
+            if len(results['items']) < 100:  # Spotify usually returns 100 items max
+                break
+                
+        except Exception as e:
+            print(f"Error fetching playlist tracks: {e}")
+            break
+
+    return saved_tracks
