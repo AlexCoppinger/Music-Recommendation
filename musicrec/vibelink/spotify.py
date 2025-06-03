@@ -1,10 +1,14 @@
 import spotipy
+from spotipy.cache_handler import MemoryCacheHandler
+
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .models import User
 from django.conf import settings
 from .models import Track, Playlist, User, TrackPlaylist
+
+
 
 import datetime
 
@@ -161,7 +165,8 @@ def get_spotify_oauth():
         client_secret=settings.SPOTIFY_CLIENT_SECRET,
         redirect_uri=settings.SPOTIFY_REDIRECT_URI,
         scope=settings.SPOTIFY_SCOPE,
-        show_dialog=True,  # Show the dialog for user consent
+        show_dialog=True,  # Do not show the dialog for user consent
+        cache_handler=MemoryCacheHandler(),  # Disable caching to avoid issues with session management
     )
 
 def get_spotify_client_credentials():

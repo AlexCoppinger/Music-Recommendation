@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 
 import spotipy 
+import uuid
 
 
 
@@ -54,7 +55,7 @@ def register(request):
 
 def spotify_login(request):
     sp_oauth = get_spotify_oauth()
-    auth_url = sp_oauth.get_authorize_url()
+    auth_url = sp_oauth.get_authorize_url() + f"&state={uuid.uuid4()}"
 
     next_url = request.GET.get('next')
     if next_url:
@@ -63,11 +64,23 @@ def spotify_login(request):
     return redirect(auth_url)
 
 def spotify_logout(request):
+
+    if request.user.is_authenticated:
+    # Store the Spotify access token to revoke it
+        access_token = request.user.spotify_access_token
+    
+    
     logout(request)
+
+    response = redirect('vibelink:home')
+    response.delete_cookie('sessionid')  # Explicitly delete session cookie
+
     messages.success(request, 'You have been logged out.')
-    return redirect('vibelink:home')
+    return response
 
 def spotify_callback(request):
+    print("spotify_callback called")
+
     sp_oauth = get_spotify_oauth()
     code = request.GET.get('code')
     error = request.GET.get('error')
@@ -76,12 +89,16 @@ def spotify_callback(request):
         return render(request, "vibelink/error.html", {"message": f"Spotify authorization failed: {error}"})
 
     if code:
+        print(f"Received code: {code}")
         try:
             token_info = sp_oauth.get_access_token(code, as_dict=True)
             access_token = token_info['access_token']
             refresh_token = token_info.get('refresh_token')
+            print(f"Access token: {access_token}")
+            
             sp = spotipy.Spotify(auth=access_token)
             profile = sp.current_user()
+            print(f"User profile: {profile}")
 
             # Get profile image if available
             profile_image_url = None

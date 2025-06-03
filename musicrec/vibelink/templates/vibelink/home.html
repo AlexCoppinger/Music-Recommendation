@@ -11,6 +11,7 @@
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Default Profile" class="profile-image">
                 {% endif %}
                 <div class="dropdown-content">
+                    <span>{{ user.display_name }}</span>
                     <a href="{% url 'vibelink:logout' %}">Logout</a>
                 </div>
             </div>
