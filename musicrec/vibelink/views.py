@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect
 from .spotify import search_playlists, search_tracks 
 from .spotify import get_spotify_oauth, get_spotify_client
 from .forms import CustomUserCreationForm
-from .models import User
+from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe
 
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import JsonResponse
 
@@ -140,25 +142,25 @@ def spotify_callback(request):
     
 
 
-# Using the client
 
+# Don't know if this is needed
 def show_profile(request):
     sp = get_spotify_client(request)
     me = sp.current_user()
     return JsonResponse(me)
 
 
-# view for displaying playlist tracks
-def playlist_tracks_view(request, playlist_id):
-    try:
-        playlist = Playlist.objects.get(spotify_id=playlist_id)
-        tracks = get_playlist_tracks(playlist_id)
-        return render(request, 'vibelink/playlist_tracks.html', {
-            'playlist': playlist,
-            'tracks': tracks
-        })
-    except Exception as e:
-        return render(request, 'vibelink/search.html', {'error': str(e)})
+# view for displaying playlist tracks, but I don't think the code is ready yet
+# def playlist_tracks_view(request, playlist_id):
+#     try:
+#         playlist = Playlist.objects.get(spotify_id=playlist_id)
+#         tracks = get_playlist_tracks(playlist_id)
+#         return render(request, 'vibelink/playlist_tracks.html', {
+#             'playlist': playlist,
+#             'tracks': tracks
+#         })
+#     except Exception as e:
+#         return render(request, 'vibelink/search.html', {'error': str(e)})
     
 # View for displaying algorithms
 def algorithms_view(request):
@@ -184,3 +186,48 @@ def rate_song_view(request):
     #         messages.error(request, 'Rating is required.')
 
     return render(request, 'vibelink/rate.html')
+
+@login_required
+def vibes_view(request):
+    user = request.user
+    user_vibes = UserVibe.objects.filter(user=user)
+
+    if request.method == 'POST':
+        search_term = request.POST.get('search_term')
+        if search_term:
+            vibe = Vibe.objects.create(name=search_term)
+            UserVibe.objects.create(user=user, algorithm=vibe, search_term=search_term)
+            return redirect('vibelink:vibes')  # Replace with your URL name
+
+
+    return render(request, 'vibelink/vibes.html', {
+        'vibes': user_vibes,
+        'has_vibes': user_vibes.exists()
+    })
+
+@login_required
+def new_vibe_view(request):
+    user = request.user
+
+    if request.method == 'POST':
+        search_term = request.POST.get('search_term')
+        if search_term:
+            # Check if Vibe name already exists
+                vibe = Vibe.objects.create(name=search_term)
+                UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
+                print("Vibe Created")
+                return redirect('vibelink:vibes')
+
+    return render(request, 'vibelink/new_vibe.html')
+
+@login_required
+def vibe_detail_view(request, vibe_name):
+    vibe = get_object_or_404(Vibe, name=vibe_name)
+    return render(request, 'vibelink/vibe_detail.html', {'vibe': vibe})
+
+@login_required
+def delete_vibe_view(request, uservibe_id):
+    vibe_instance = get_object_or_404(UserVibe, id=uservibe_id, user=request.user)
+    if request.method == 'POST':
+        vibe_instance.delete()
+    return redirect('vibelink:vibes')

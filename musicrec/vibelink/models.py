@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from importlib import import_module
 
 
 
@@ -54,7 +55,7 @@ class Playlist(models.Model):
         return self.name
     
 
-# this model represents the link between tracks and playlists
+# his model represents the link between tracks and playlists
 class TrackPlaylist(models.Model):
     """
     Model representing the many-to-many relationship between tracks and playlists.
@@ -62,31 +63,170 @@ class TrackPlaylist(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
 
+    # This below may not be necessary
+    # order = models.IntegerField(default=0)  # To maintain the order of tracks in the playlist
+
     class Meta:
         unique_together = ('track', 'playlist')
 
     def __str__(self):
         return f"{self.track.name} in {self.playlist.name}"
     
-class Vibe(models.Model):
+
+# Create a UserXPlaylist model if you need to store additional information about the relationship
+class UserXPlaylist(models.Model):
     """
-    A vibe that corresponds to a musical atmosphere, feeling, or aesthetic.
+    Model representing the many-to-many relationship between users and playlists.
     """
+    user = models.ForeignKey(User, related_name='user_playlists', on_delete=models.CASCADE)
+    playlist = models.ForeignKey(Playlist, related_name='playlist_users', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'playlist')  # Ensure a user can only have one instance of a playlist
+
+    def __str__(self):
+        return f"{self.user.name} - {self.playlist.name}"
+
+
+class UserXTrack(models.Model):
+    """
+    Model representing the many-to-many relationship between users and tracks.
+    """
+    user = models.ForeignKey(User, related_name='user_tracks', on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, related_name='track_users', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'track')  # Ensure a user can only have one instance of a track
+
+    def __str__(self):
+        return f"{self.user.name} - {self.track.name}"
+
+class Purpose(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    search_query = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    
-    callback = models.CharField(max_length=255, blank=True, help_text="Function to process vibe search")
 
     def __str__(self):
         return self.name
 
+class TrackRating(models.Model):
+    RATING_CHOICES = [
+        (1, 'Strongly Agree'),
+        (2, 'Somewhat Agree'),
+        (3, 'Neither Agree nor Disagree'),
+        (4, 'Somewhat Disagree'),
+        (5, 'Strongly Disagree'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    purpose = models.ForeignKey(Purpose, on_delete=models.CASCADE)
+    like_rating = models.IntegerField(choices=RATING_CHOICES)
+    purpose_rating = models.IntegerField(choices=RATING_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'track', 'purpose')
+
+    def update_coefficient(self, vibe_name):
+        """
+        Update the coefficient value for the track.
+        """
+        callback = Vibe.objects.get(name=vibe_name).callback
+
+        # Call the callback function to update the coefficient
+        # 
+ 
+
+
+class PlaylistSearchResult(models.Model):
+    """
+    Model to associate a search query with imported playlists.
+    """
+    query = models.CharField(max_length=255)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('query', 'playlist')  # Ensure uniqueness of query and playlist
+
+    def __str__(self):
+        return f"Query: {self.query} - Playlist: {self.playlist.name}"
+
+
+class TrackSearchResult(models.Model):
+    """
+    Model to associate a search query with imported tracks.
+    """
+    query = models.CharField(max_length=255)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('query', 'track')  # Ensure uniqueness of query and track
+
+    def __str__(self):
+        return f"Query: {self.query} - Track: {self.track.name}"
+    
+
+class Vibe(models.Model):
+    """
+    Model representing a recommendation algorithm.
+    """
+    name = models.CharField(max_length=255)
+    # Can't be blank apparently, so I'm adding a blank default
+    description = models.TextField(blank=True, default='')  # Description of the algorithm
+    # The algorithm used for recommendations (e.g., collaborative filtering, content-based)
+    algorithm_type = models.CharField(max_length=255, blank=True)
+
+    callback = models.CharField(max_length=255, blank=True)  # Callback function for the algorithm
+
     def execute_callback(self, **kwargs):
         """
-        Executes the callback associated with this Vibe to fetch tracks from Spotify.
+        Execute the callback function for the algorithm.
         """
+    # Check whether we specified by a module and a method
         modules = self.callback.split('.')
+
+        # The actual method is at the end
         method = modules.pop()
+
         module = import_module('.'.join(modules))
+
         function = getattr(module, method)
-        return function(self, **kwargs)
+
+        result = function(self, **kwargs)
+
+        return result
+
+        # Call the callback function with the request and optional parameters
+        # Don't know why this is here since it doesn't seem to be used
+        #return callback_function(self, **kwargs)
+
+
+class TrackCoefficient(models.Model):
+    """
+    Model to store track coefficients based on user ratings.
+    """
+    track = models.ForeignKey('Track', on_delete=models.CASCADE)
+    vibe = models.ForeignKey('Vibe', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    coefficient = models.FloatField(default=0.0)  # Coefficient value for the track
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('track', 'vibe', 'user')
+        ordering = ['-coefficient']
+        # Order by coefficient in descending order
+
+class UserVibe(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_vibes')
+    vibe = models.ForeignKey(Vibe, on_delete=models.CASCADE, related_name='vibe_users')
+    search_term = models.CharField(max_length=255)  # This is the "vibe" search query
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'vibe')  # Prevent duplicates
+
+    def __str__(self):
+        return f"{self.user.username} - {self.vibe.name} ({self.search_term})"

@@ -1,32 +1,9 @@
-<h1>Rate Page</h1>
+<!-- templates/vibelink/vibe_detail.html -->
+<h1>{{ vibe.name }}</h1>
+<p>This is the vibe detail page for "{{ vibe.name }}"</p>
 
-<h2>On this page, we will display the name of the algorithm (or vibe), and the next song to be rated. Moreover, we could potentially have a playlist with the songs already added, and have an option of going onto spotify from there?</h2>
-
-<!-- User Authentication Area -->
-<div class="user-auth-area">
-    {% if user.is_authenticated %}
-        <div class="user-profile">
-            <div class="dropdown">
-                {% if user.profile_image %}
-                    <img src="{{ user.profile_image }}" alt="Profile" class="profile-image">
-                {% else %}
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Default Profile" class="profile-image">
-                {% endif %}
-                <div class="dropdown-content">
-                    <span>{{ user.display_name }}</span>
-                    <a href="{% url 'vibelink:logout' %}">Logout</a>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="login-prompt">
-            <a href="{% url 'vibelink:login' %}" class="button">Login with Spotify</a>
-        </div>
-    {% endif %}
-</div>
-
-<a href="{% url 'vibelink:vibes' %}" class="button">Vibes Page</a>
-<a href="{% url 'vibelink:home' %}" class="button">Home</a>
+<a href="{% url 'vibelink:vibes' %}" class="button">← Back to Vibes for (user)</a>
+<a href="{% url 'vibelink:rate_song' %}" class="button">Rate Page</a>
 
 <style>
     .button {

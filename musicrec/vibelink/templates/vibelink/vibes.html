@@ -1,4 +1,4 @@
-<h1>Algorithms page</h1>
+<h1>Your Vibes</h1>
 
 <h2>On this page, we'd have the list of algorithms that a specific user has and we would be able to click on them. We could also create a new algorithm - maybe we should call it a vibe lol?</h2>
 
@@ -25,9 +25,35 @@
     {% endif %}
 </div>
 
-<a href="{% url 'vibelink:home' %}" class="button">Home</a>
-<a href="{% url 'vibelink:rate_song' %}" class="button">Rate Page</a>
+<ul>
+  {% for vibe in vibes %}
+    <li class="dropdown">
+      <button class="dropbtn">{{ vibe.vibe.name }} ({{ vibe.search_term }})</button>
+      <div class="dropdown-content">
+        <a href="{% url 'vibelink:vibe_detail' vibe.vibe.name %}">View Vibe</a>
+        <form method="post" action="{% url 'vibelink:delete_vibe' vibe.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="delete-button">Delete</button>
+        </form>
+      </div>
+    </li>
+  {% empty %}
+    <li>No vibes yet!</li>
+  {% endfor %}
+</ul>
 
+
+{% if has_vibes %}
+  <a href="{% url 'vibelink:new_vibe' %}" class="button">Create a New Vibe</a>
+{% else %}
+  <h2>You don't have any vibes yet!</h2>
+  <a href="{% url 'vibelink:new_vibe' %}" class="button">Create Your First Vibe</a>
+{% endif %}
+
+<h2>We also need a way to delete a vibe.</h2>
+<h2>I guess the way to do it is each vibe has a sort of dropdown menu where you can potentially delete it, or enter it</h2>
+
+<a href="{% url 'vibelink:home' %}" class="button">Home</a>
 
 <style>
     .button {

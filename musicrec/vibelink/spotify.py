@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .models import User
 from django.conf import settings
-from .models import Track, Playlist, User, TrackPlaylist
+from .models import Track, Playlist, User, TrackPlaylist, Vibe
 
 
 
@@ -259,4 +259,18 @@ def get_playlist_tracks(playlist_id):
             break
 
     return saved_tracks
+
+def create_vibe(user, vibe_name, description):
+    """
+    Create a new vibe for the user.
+    """
+    if not user:
+        raise ValueError("User must be provided")
+
+    vibe = Vibe.objects.create(
+        user=user,
+        name=vibe_name,
+        description=description
+    )
+    return vibe
 

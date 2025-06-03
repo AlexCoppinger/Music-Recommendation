@@ -1,0 +1,8 @@
+<h1>Create Vibe</h1>
+<form method="post">
+  {% csrf_token %}
+  <label for="search_term">Search Term:</label>
+  <input type="text" name="search_term" required>
+  <button type="submit">Create Vibe</button>
+</form>
+<a href="{% url 'vibelink:vibes' %}">Back to Vibes</a>
