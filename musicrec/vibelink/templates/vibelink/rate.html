@@ -1,4 +1,6 @@
-<h1>Homepage of VibeLink</h1>
+<h1>Rate Page</h1>
+
+<h2>On this page, we will display the name of the algorithm (or vibe), and the next song to be rated. Moreover, we could potentially have a playlist with the songs already added, and have an option of going onto spotify from there?</h2>
 
 <!-- User Authentication Area -->
 <div class="user-auth-area">
@@ -23,8 +25,8 @@
     {% endif %}
 </div>
 
-<a href="{% url 'vibelink:search_playlists' %}" class="button">Search Page</a>
 <a href="{% url 'vibelink:algorithms' %}" class="button">Algorithms Page</a>
+<a href="{% url 'vibelink:home' %}" class="button">Home</a>
 
 <style>
     .button {

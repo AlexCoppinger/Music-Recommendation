@@ -67,3 +67,26 @@ class TrackPlaylist(models.Model):
 
     def __str__(self):
         return f"{self.track.name} in {self.playlist.name}"
+    
+class Vibe(models.Model):
+    """
+    A vibe that corresponds to a musical atmosphere, feeling, or aesthetic.
+    """
+    name = models.CharField(max_length=255, unique=True)
+    search_query = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    
+    callback = models.CharField(max_length=255, blank=True, help_text="Function to process vibe search")
+
+    def __str__(self):
+        return self.name
+
+    def execute_callback(self, **kwargs):
+        """
+        Executes the callback associated with this Vibe to fetch tracks from Spotify.
+        """
+        modules = self.callback.split('.')
+        method = modules.pop()
+        module = import_module('.'.join(modules))
+        function = getattr(module, method)
+        return function(self, **kwargs)

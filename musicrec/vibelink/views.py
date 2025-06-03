@@ -159,3 +159,28 @@ def playlist_tracks_view(request, playlist_id):
         })
     except Exception as e:
         return render(request, 'vibelink/search.html', {'error': str(e)})
+    
+# View for displaying algorithms
+def algorithms_view(request):
+    if not request.user.is_authenticated:
+        return redirect('vibelink:login')
+
+    # Assuming you have a method to get algorithms for the user
+    #algorithms = request.user.get_algorithms()  # Replace with actual method to get algorithms
+    return render(request, 'vibelink/algorithms.html')
+
+# View for rating a song
+def rate_song_view(request):
+    if not request.user.is_authenticated:
+        return redirect('vibelink:login')
+
+    # if request.method == 'POST':
+    #     rating = request.POST.get('rating')
+    #     if rating:
+    #         # Assuming you have a method to rate a song for the user
+    #         request.user.rate_song(algorithm_name, track_id, rating)  # Replace with actual method to rate song
+    #         messages.success(request, 'Song rated successfully!')
+    #     else:
+    #         messages.error(request, 'Rating is required.')
+
+    return render(request, 'vibelink/rate.html')

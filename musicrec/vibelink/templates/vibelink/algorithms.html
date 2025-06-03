@@ -1,4 +1,6 @@
-<h1>Homepage of VibeLink</h1>
+<h1>Algorithms page</h1>
+
+<h2>On this page, we'd have the list of algorithms that a specific user has and we would be able to click on them. We could also create a new algorithm - maybe we should call it a vibe lol?</h2>
 
 <!-- User Authentication Area -->
 <div class="user-auth-area">
@@ -23,8 +25,9 @@
     {% endif %}
 </div>
 
-<a href="{% url 'vibelink:search_playlists' %}" class="button">Search Page</a>
-<a href="{% url 'vibelink:algorithms' %}" class="button">Algorithms Page</a>
+<a href="{% url 'vibelink:home' %}" class="button">Home</a>
+<a href="{% url 'vibelink:rate_song' %}" class="button">Rate Page</a>
+
 
 <style>
     .button {

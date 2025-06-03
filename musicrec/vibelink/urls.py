@@ -11,6 +11,11 @@ urlpatterns = [
     path('spotify/login/', views.spotify_login, name='login'),
     path('spotify/logout/', views.spotify_logout, name='logout'),
     path('spotify/callback/', views.spotify_callback, name='callback'),
-    path('playlist/<str:playlist_id>/tracks/', views.playlist_tracks_view, name='playlist_tracks')
+    #path('playlist/<str:playlist_id>/tracks/', views.playlist_tracks_view, name='playlist_tracks'),
+
+    # Add a path to see the set of algorithms for the user
+    path('algorithms/', views.algorithms_view, name='algorithms'),
+    # Add a path to rate the song for the specific algorithm/user
+    path('rate/song', views.rate_song_view, name='rate_song'),
 ]
 
