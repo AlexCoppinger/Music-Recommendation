@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .spotify import search_playlists, search_tracks 
 from .spotify import get_spotify_oauth, get_spotify_client
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, TrackRatingForm
 from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe
 
 from django.contrib.auth import login, logout
@@ -12,6 +12,7 @@ from django.http import JsonResponse
 
 import spotipy 
 import uuid
+import json
 
 
 
@@ -94,6 +95,7 @@ def spotify_callback(request):
         print(f"Received code: {code}")
         try:
             token_info = sp_oauth.get_access_token(code, as_dict=True)
+            request.session['token_info'] = token_info  # Store token info in session
             access_token = token_info['access_token']
             refresh_token = token_info.get('refresh_token')
             print(f"Access token: {access_token}")
@@ -141,51 +143,87 @@ def spotify_callback(request):
         return redirect('vibelink:home')
     
 
+# Because there keeps being that stupid user error
+def refresh_spotify_token(user):
+    """Refresh the user's Spotify access token if it has expired"""
+    try:
+        sp_oauth = get_spotify_oauth()
+        if user.spotify_refresh_token:
+            token_info = sp_oauth.refresh_access_token(user.spotify_refresh_token)
+            user.spotify_access_token = token_info['access_token']
+            user.save()
+            return True
+    except Exception as e:
+        print(f"Error refreshing token: {str(e)}")
+        return False
+    return False
+
+@login_required
+def play_track(request):
+    if request.method == 'POST':
+        try:
+            refresh_spotify_token(request.user)
+
+            data = json.loads(request.body)
+            track_id = data.get('track_id')
+            print("Track ID received:", track_id)
+
+            track = Track.objects.get(id=track_id)
+            print("Found track:", track.name)
+
+            sp = get_spotify_client(request)
+            print("Spotify client retrieved")
+            print("Token info from request:", request.session.get("token_info"))
+
+            try:
+                user = sp.current_user()
+                print("✅ Logged in as:", user['display_name'], "| ID:", user['id'])
+            except Exception as e:
+                print("❌ Failed to get user profile:", e)
 
 
-# Don't know if this is needed
-def show_profile(request):
-    sp = get_spotify_client(request)
-    me = sp.current_user()
-    return JsonResponse(me)
+            devices = sp.devices().get('devices', [])
+            print("Devices:", devices)
+
+            if not devices:
+                return JsonResponse({'success': False, 'error': 'No active Spotify device found'}, status=400)
+
+            active_device = next((d for d in devices if d['is_active']), None)
+            device_id = active_device['id'] if active_device else devices[0]['id']
+
+            print("Selected device ID:", device_id)
+
+            sp.transfer_playback(device_id=device_id, force_play=True)
+            sp.start_playback(device_id=device_id, uris=[track.uri])
+
+            return JsonResponse({'success': True})
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 
-# view for displaying playlist tracks, but I don't think the code is ready yet
-# def playlist_tracks_view(request, playlist_id):
-#     try:
-#         playlist = Playlist.objects.get(spotify_id=playlist_id)
-#         tracks = get_playlist_tracks(playlist_id)
-#         return render(request, 'vibelink/playlist_tracks.html', {
-#             'playlist': playlist,
-#             'tracks': tracks
-#         })
-#     except Exception as e:
-#         return render(request, 'vibelink/search.html', {'error': str(e)})
-    
-# View for displaying algorithms
-def algorithms_view(request):
-    if not request.user.is_authenticated:
-        return redirect('vibelink:login')
-
-    # Assuming you have a method to get algorithms for the user
-    #algorithms = request.user.get_algorithms()  # Replace with actual method to get algorithms
-    return render(request, 'vibelink/algorithms.html')
-
-# View for rating a song
+@login_required
 def rate_song_view(request):
-    if not request.user.is_authenticated:
-        return redirect('vibelink:login')
-
-    # if request.method == 'POST':
-    #     rating = request.POST.get('rating')
-    #     if rating:
-    #         # Assuming you have a method to rate a song for the user
-    #         request.user.rate_song(algorithm_name, track_id, rating)  # Replace with actual method to rate song
-    #         messages.success(request, 'Song rated successfully!')
-    #     else:
-    #         messages.error(request, 'Rating is required.')
-
-    return render(request, 'vibelink/rate.html')
+    # Try to get a track, and if none exists, create a sample one
+    track = Track.objects.first()
+    
+    if not track:
+        # Create a sample track with a known working preview URL
+        track = Track.objects.create(
+            spotify_id="6rqhFgbbKwnb9MLmUQDhG6",
+            name="Elephant",
+            artist="Tame Impala",
+            album="Lonerism",
+            duration_ms=247680,
+            uri="spotify:track:6rqhFgbbKwnb9MLmUQDhG6",
+            preview_url="https://p.scdn.co/mp3-preview/8d3df1c64907cb183172b0dc51a7d9e801a9ccf6"
+        )
+    
+    return render(request, 'vibelink/rate.html', {'track': track})
 
 @login_required
 def vibes_view(request):
@@ -227,7 +265,12 @@ def vibe_detail_view(request, vibe_name):
 
 @login_required
 def delete_vibe_view(request, uservibe_id):
-    vibe_instance = get_object_or_404(UserVibe, id=uservibe_id, user=request.user)
+    user_vibe = get_object_or_404(UserVibe, id=uservibe_id, user=request.user)
     if request.method == 'POST':
-        vibe_instance.delete()
+        vibe = user_vibe.vibe
+        user_vibe.delete()
+
+        if not UserVibe.objects.filter(vibe=vibe).exists():
+            vibe.delete()
+
     return redirect('vibelink:vibes')

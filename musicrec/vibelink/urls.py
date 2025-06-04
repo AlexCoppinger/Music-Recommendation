@@ -20,5 +20,6 @@ urlpatterns = [
     path('vibes/delete/<int:uservibe_id>/', views.delete_vibe_view, name='delete_vibe'),
     # Add a path to rate the song for the specific algorithm/user
     path('rate/song', views.rate_song_view, name='rate_song'),
+    path('play-track/', views.play_track, name='play_track'),
 ]
 

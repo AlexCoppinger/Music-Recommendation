@@ -1,6 +1,5 @@
 <h1>Your Vibes</h1>
 
-<h2>On this page, we'd have the list of algorithms that a specific user has and we would be able to click on them. We could also create a new algorithm - maybe we should call it a vibe lol?</h2>
 
 <!-- User Authentication Area -->
 <div class="user-auth-area">
@@ -43,6 +42,7 @@
 </ul>
 
 
+
 {% if has_vibes %}
   <a href="{% url 'vibelink:new_vibe' %}" class="button">Create a New Vibe</a>
 {% else %}
@@ -50,8 +50,7 @@
   <a href="{% url 'vibelink:new_vibe' %}" class="button">Create Your First Vibe</a>
 {% endif %}
 
-<h2>We also need a way to delete a vibe.</h2>
-<h2>I guess the way to do it is each vibe has a sort of dropdown menu where you can potentially delete it, or enter it</h2>
+<h2></h2>
 
 <a href="{% url 'vibelink:home' %}" class="button">Home</a>
 

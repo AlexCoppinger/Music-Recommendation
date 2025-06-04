@@ -1,101 +1,42 @@
-<h1>Rate Page</h1>
+<h1>Rate Track</h1>
+<div class="container text-center mt-5">
+    <h2>{{ track.name }}</h2>
+    <p><strong>Artist:</strong> {{ track.artist }}</p>
+    <p><strong>Album:</strong> {{ track.album }}</p>
 
-<h2>On this page, we will display the name of the algorithm (or vibe), and the next song to be rated. Moreover, we could potentially have a playlist with the songs already added, and have an option of going onto spotify from there?</h2>
-
-<!-- User Authentication Area -->
-<div class="user-auth-area">
-    {% if user.is_authenticated %}
-        <div class="user-profile">
-            <div class="dropdown">
-                {% if user.profile_image %}
-                    <img src="{{ user.profile_image }}" alt="Profile" class="profile-image">
-                {% else %}
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Default Profile" class="profile-image">
-                {% endif %}
-                <div class="dropdown-content">
-                    <span>{{ user.display_name }}</span>
-                    <a href="{% url 'vibelink:logout' %}">Logout</a>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="login-prompt">
-            <a href="{% url 'vibelink:login' %}" class="button">Login with Spotify</a>
-        </div>
-    {% endif %}
+    <button class="btn btn-success play-btn"
+            data-track-id="{{ track.id }}">
+        ▶️ Play on Spotify
+    </button>
 </div>
 
-<a href="{% url 'vibelink:vibes' %}" class="button">Vibes Page</a>
-<a href="{% url 'vibelink:home' %}" class="button">Home</a>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const playButton = document.querySelector('.play-btn');
 
-<style>
-    .button {
-        display: inline-block;
-        padding: 10px 20px;
-        font-size: 16px;
-        color: rgb(5, 2, 2);
-        background-color: #7dd6c4d3; 
-        text-decoration: none;
-        border: 3px dashed #ff5733;
-        border-radius: 15px;
-        box-shadow: 0 0 10px #ff3333, 0 0 20px #11007c; /* Glowing effect */
-        animation: pulse 0.01s infinite;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
+    playButton.addEventListener('click', function () {
+        const trackId = this.dataset.trackId;
 
-    .button:hover {
-        background-color: #b3650062; 
-    }
-    
-    /* User authentication area styling */
-    .user-auth-area {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-    }
-    
-    .profile-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        cursor: pointer;
-        border: 3px dashed #ff5733;
-        box-shadow: 0 0 10px #ff3333;
-    }
-    
-    /* Dropdown menu styling */
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        right: 0;
-        background-color: #7dd6c4d3;
-        min-width: 120px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        z-index: 1;
-        border-radius: 10px;
-        border: 2px dashed #ff5733;
-    }
-    
-    .dropdown-content a {
-        color: rgb(5, 2, 2);
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-    }
-    
-    .dropdown-content a:hover {
-        background-color: #b3650062;
-        border-radius: 8px;
-    }
-    
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
-</style>
+        fetch("{% url 'vibelink:play_track' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ track_id: trackId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Playback started on your Spotify device.');
+            } else {
+                alert('Playback failed: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            alert("Request failed: " + error.message);
+        });
+    });
+});
+</script>

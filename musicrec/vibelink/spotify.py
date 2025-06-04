@@ -18,33 +18,6 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
                      client_id=settings.SPOTIFY_CLIENT_ID, 
                      client_secret=settings.SPOTIFY_CLIENT_SECRET
                      ))
-## I'll have to figure out how to get the auth manager to work with this
-
-
-# def get_spotify_oauth():
-#     """
-#     Get a Spotify OAuth object for user authentication.
-#     This is used for user-specific actions like modifying playlists.
-#     """
-#     return SpotifyOAuth(
-#         client_id=settings.SPOTIFY_CLIENT_ID,
-#         client_secret=settings.SPOTIFY_CLIENT_SECRET,
-#         redirect_uri=settings.SPOTIFY_REDIRECT_URI,
-#         scope=settings.SPOTIFY_SCOPE,
-#     )
-
-
-# def get_spotify_client_credentials():
-#     """
-#     Get a Spotify client using client credentials flow (no user authentication).
-#     Useful for general Spotify API queries that don't require user-specific data.
-#     """
-#     client_credentials_manager = SpotifyClientCredentials(
-#         client_id=settings.SPOTIFY_CLIENT_ID,
-#         client_secret=settings.SPOTIFY_CLIENT_SECRET
-#     )
-#     return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-
 
 
 
@@ -177,15 +150,15 @@ def get_spotify_client_credentials():
     return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 def get_spotify_client(request=None):
-    if request and 'spotify_token_info' in request.session:
-        token_info = request.session['spotify_token_info']
+    if request and 'token_info' in request.session:
+        token_info = request.session['token_info']
         now = int(datetime.datetime.now().timestamp())
         is_expired = token_info.get('expires_at', 0) - now < 60
 
         if is_expired:
             sp_oauth = get_spotify_oauth()
             token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-            request.session['spotify_token_info'] = token_info
+            request.session['token_info'] = token_info
 
         return spotipy.Spotify(auth=token_info['access_token'])
 
