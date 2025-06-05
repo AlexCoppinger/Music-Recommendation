@@ -39,6 +39,7 @@ class Track(models.Model):
     spotify_id = models.CharField(max_length=255, unique=True, null=True)  # Unique identifier for the track in Spotify
     uri = models.CharField(max_length=255, blank=True, null=True)  # URI for the track in Spotify
     preview_url = models.URLField(blank=True, null=True)  # URL for the track preview
+    image_url = models.URLField(blank=True, null=True)  # URL for the track's album art
     
     class Meta:
         verbose_name = 'Track'

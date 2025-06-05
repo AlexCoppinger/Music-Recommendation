@@ -122,6 +122,7 @@ def import_items(query, type, force_new=False):
                         'album': item['album']['name'],
                         'duration_ms': item['duration_ms'],
                         'preview_url': item['preview_url'],
+                        'image_url': item['album']['images'][0]['url'] if item['album']['images'] else '',
                     }
                 )
                 # Add the track to our context
