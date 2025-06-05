@@ -101,12 +101,6 @@ class UserXTrack(models.Model):
     def __str__(self):
         return f"{self.user.name} - {self.track.name}"
 
-class Purpose(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
-
 class TrackRating(models.Model):
     RATING_CHOICES = [
         (1, 'Strongly Agree'),
@@ -118,13 +112,11 @@ class TrackRating(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
-    purpose = models.ForeignKey(Purpose, on_delete=models.CASCADE)
-    like_rating = models.IntegerField(choices=RATING_CHOICES)
-    purpose_rating = models.IntegerField(choices=RATING_CHOICES)
+    rating = models.IntegerField(choices=RATING_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'track', 'purpose')
+        unique_together = ('user', 'track')
 
     def update_coefficient(self, vibe_name):
         """
@@ -133,7 +125,6 @@ class TrackRating(models.Model):
         callback = Vibe.objects.get(name=vibe_name).callback
 
         # Call the callback function to update the coefficient
-        # 
  
 
 
@@ -182,6 +173,10 @@ class Vibe(models.Model):
     def execute_callback(self, **kwargs):
         """
         Execute the callback function for the algorithm.
+        This function basically recieves a bunch of arguments for its creation 
+        and when executed can call the function specified in the callback field.
+        It imports the module and calls the method specified in the callback field.
+
         """
     # Check whether we specified by a module and a method
         modules = self.callback.split('.')
@@ -198,13 +193,16 @@ class Vibe(models.Model):
         return result
 
         # Call the callback function with the request and optional parameters
-        # Don't know why this is here since it doesn't seem to be used
-        #return callback_function(self, **kwargs)
 
 
 class TrackCoefficient(models.Model):
     """
     Model to store track coefficients based on user ratings.
+    This is actually where most of the computations may happen. 
+    When we get a search term from UserVibe, the search term will search 
+    for a playlist, then we run the computations on all the playlists
+    and put all the tracks (including their coefficients) into this. 
+    We can then backtrack using the playlists that were saved to run the calculations
     """
     track = models.ForeignKey('Track', on_delete=models.CASCADE)
     vibe = models.ForeignKey('Vibe', on_delete=models.CASCADE)

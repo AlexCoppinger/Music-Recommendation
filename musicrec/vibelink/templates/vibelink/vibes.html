@@ -27,7 +27,7 @@
 <ul>
   {% for vibe in vibes %}
     <li class="dropdown">
-      <button class="dropbtn">{{ vibe.vibe.name }} ({{ vibe.search_term }})</button>
+      <button class="dropbtn">{{ vibe.vibe.name }}</button>
       <div class="dropdown-content">
         <a href="{% url 'vibelink:vibe_detail' vibe.vibe.name %}">View Vibe</a>
         <form method="post" action="{% url 'vibelink:delete_vibe' vibe.id %}" style="display:inline;">

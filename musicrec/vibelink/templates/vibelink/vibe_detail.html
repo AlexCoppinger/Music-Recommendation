@@ -1,8 +1,21 @@
 <!-- templates/vibelink/vibe_detail.html -->
 <h1>{{ vibe.name }}</h1>
-<p>This is the vibe detail page for "{{ vibe.name }}"</p>
 
-<a href="{% url 'vibelink:vibes' %}" class="button">← Back to Vibes for (user)</a>
+<!-- Description display/edit section -->
+<div id="description-display-section">
+    <h2 id="description-text">{{ vibe.description|default:"No description available" }}</h2>
+    <button id="edit-description-btn" class="button edit-btn">Edit Description</button>
+</div>
+
+<div id="description-edit-section" style="display: none;">
+    <textarea id="description-editor" rows="4" cols="50">{{ vibe.description }}</textarea>
+    <div class="button-group">
+        <button id="save-description-btn" class="button save-btn">Save</button>
+        <button id="cancel-edit-btn" class="button cancel-btn">Cancel</button>
+    </div>
+</div>
+
+<a href="{% url 'vibelink:vibes' %}" class="button">← Back to Vibes for {{ user.display_name }}</a>
 <a href="{% url 'vibelink:rate_song' %}" class="button">Rate Page</a>
 
 <style>
@@ -19,60 +32,113 @@
         animation: pulse 0.01s infinite;
         cursor: pointer;
         transition: background-color 0.3s ease;
+        margin: 5px;
     }
 
     .button:hover {
         background-color: #b3650062; 
     }
     
-    /* User authentication area styling */
-    .user-auth-area {
-        position: absolute;
-        top: 20px;
-        right: 20px;
+    .edit-btn {
+        font-size: 14px;
+        padding: 5px 10px;
+        margin-left: 10px;
     }
     
-    .profile-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        cursor: pointer;
+    .save-btn {
+        background-color: #4CAF50;
+    }
+    
+    .cancel-btn {
+        background-color: #f44336;
+    }
+    
+    .button-group {
+        margin-top: 10px;
+    }
+    
+    #description-editor {
+        width: 100%;
+        padding: 10px;
         border: 3px dashed #ff5733;
-        box-shadow: 0 0 10px #ff3333;
-    }
-    
-    /* Dropdown menu styling */
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        right: 0;
-        background-color: #7dd6c4d3;
-        min-width: 120px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        z-index: 1;
         border-radius: 10px;
-        border: 2px dashed #ff5733;
+        font-size: 16px;
+        background-color: #fff8e1;
     }
     
-    .dropdown-content a {
-        color: rgb(5, 2, 2);
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-    }
-    
-    .dropdown-content a:hover {
-        background-color: #b3650062;
-        border-radius: 8px;
-    }
-    
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
+    /* User authentication area styling */
+    /* Keep your existing styles below */
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const displaySection = document.getElementById('description-display-section');
+    const editSection = document.getElementById('description-edit-section');
+    const descriptionText = document.getElementById('description-text');
+    const descriptionEditor = document.getElementById('description-editor');
+    const editBtn = document.getElementById('edit-description-btn');
+    const saveBtn = document.getElementById('save-description-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    
+    // Store original description
+    let originalDescription = descriptionEditor.value;
+    
+    // Edit button click handler
+    editBtn.addEventListener('click', function() {
+        displaySection.style.display = 'none';
+        editSection.style.display = 'block';
+        descriptionEditor.focus();
+    });
+    
+    // Cancel button click handler
+    cancelBtn.addEventListener('click', function() {
+        // Restore original value
+        descriptionEditor.value = originalDescription;
+        displaySection.style.display = 'block';
+        editSection.style.display = 'none';
+    });
+    
+    // Save button click handler
+    saveBtn.addEventListener('click', function() {
+        const newDescription = descriptionEditor.value;
+        
+        // Send update to server
+        fetch('{% url "vibelink:update_vibe_description" vibe.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                description: newDescription
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update displayed description
+                descriptionText.textContent = newDescription || 'No description available';
+                originalDescription = newDescription;
+                
+                // Show notification
+                alert('Description updated successfully!');
+                
+                // Switch back to display mode
+                displaySection.style.display = 'block';
+                editSection.style.display = 'none';
+            } else {
+                alert('Error updating description: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update description. Please try again.');
+        });
+    });
+});
+</script>

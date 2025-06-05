@@ -6,14 +6,80 @@
 
     <button class="btn btn-success play-btn"
             data-track-id="{{ track.id }}">
-        ▶️ Play on Spotify
+        Play on Spotify
     </button>
+    
+    <!-- Rating Slider Section -->
+    <div class="rating-container mt-4">
+        <h3>Rate This Track</h3>
+        <div class="rating-slider-container">
+            <span class="rating-low">1</span>
+            <input type="range" id="rating-slider" min="1" max="5" step="1" value="3">
+            <span class="rating-high">5</span>
+            <div class="rating-value" id="rating-value">3</div>
+        </div>
+        <div class="rating-labels">
+            <span>Dislike</span>
+            <span>Love it!</span>
+        </div>
+        <button class="btn btn-primary mt-3" id="submit-rating">Submit Rating</button>
+    </div>
 </div>
+
+<style>
+    .rating-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .rating-slider-container {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+    }
+    
+    #rating-slider {
+        flex-grow: 1;
+        margin: 0 10px;
+        height: 10px;
+    }
+    
+    .rating-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1DB954;
+        margin-left: 10px;
+        width: 30px;
+    }
+    
+    .rating-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: -10px;
+        color: #666;
+    }
+    
+    .rating-low, .rating-high {
+        color: #888;
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const playButton = document.querySelector('.play-btn');
+    const ratingSlider = document.getElementById('rating-slider');
+    const ratingValue = document.getElementById('rating-value');
+    const submitRatingButton = document.getElementById('submit-rating');
 
+    // Update the displayed rating value when slider changes
+    ratingSlider.addEventListener('input', function() {
+        ratingValue.textContent = this.value;
+    });
+
+    // Play button functionality
     playButton.addEventListener('click', function () {
         const trackId = this.dataset.trackId;
 
@@ -36,6 +102,38 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(error => {
             console.error("Fetch error:", error);
             alert("Request failed: " + error.message);
+        });
+    });
+
+    // Submit rating button
+    submitRatingButton.addEventListener('click', function() {
+        const trackId = document.querySelector('.play-btn').dataset.trackId;
+        const rating = ratingSlider.value;
+        
+        fetch("{% url 'vibelink:submit_rating' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                track_id: trackId,
+                rating: rating
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Rating submitted successfully!');
+                // Optional: Load a new track to rate
+                // window.location.reload();
+            } else {
+                alert('Failed to submit rating: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Rating submission error:", error);
+            alert("Failed to submit rating: " + error.message);
         });
     });
 });
