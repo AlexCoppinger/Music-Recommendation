@@ -72,25 +72,77 @@ class TrackPlaylist(models.Model):
     def __str__(self):
         return f"{self.track.name} in {self.playlist.name}"
     
+class Vibe(models.Model):
+    """
+    Model representing a recommendation algorithm.
+    """
+    name = models.CharField(max_length=255)
+    # Can't be blank apparently, so I'm adding a blank default
+    description = models.TextField(blank=True, default='')  # Description of the algorithm
+    # The algorithm used for recommendations (e.g., collaborative filtering, content-based)
+    algorithm_type = models.CharField(max_length=255, blank=True)
 
-# Create a UserXPlaylist model if you need to store additional information about the relationship
-class UserXPlaylist(models.Model):
-    """
-    Model representing the many-to-many relationship between users and playlists.
-    """
-    user = models.ForeignKey(User, related_name='user_playlists', on_delete=models.CASCADE)
-    playlist = models.ForeignKey(Playlist, related_name='playlist_users', on_delete=models.CASCADE)
+    callback = models.CharField(max_length=255, blank=True)  # Callback function for the algorithm
+
+    def execute_callback(self, **kwargs):
+        """
+        Execute the callback function for the algorithm.
+        This function basically recieves a bunch of arguments for its creation 
+        and when executed can call the function specified in the callback field.
+        It imports the module and calls the method specified in the callback field.
+
+        """
+    # Check whether we specified by a module and a method
+        modules = self.callback.split('.')
+
+        # The actual method is at the end
+        method = modules.pop()
+
+        module = import_module('.'.join(modules))
+
+        function = getattr(module, method)
+
+        result = function(self, **kwargs)
+
+        return result
+
+        # Call the callback function with the request and optional parameters
+    
+class UserVibe(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_vibes')
+    vibe = models.ForeignKey(Vibe, on_delete=models.CASCADE, related_name='vibe_users')
+    search_term = models.CharField(max_length=255)  # This is the "vibe" search query
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'playlist')  # Ensure a user can only have one instance of a playlist
+        unique_together = ('user', 'vibe')  # Prevent duplicates
 
     def __str__(self):
-        return f"{self.user.name} - {self.playlist.name}"
+        return f"{self.user.username} - {self.vibe.name} ({self.search_term})"
+    
+
+# Create a UserPlaylist model if you need to store additional information about the relationship
+class UserPlaylist(models.Model):
+    """
+    Model representing the many-to-many relationship between UserVibe and Playlists.
+    This preserves the context of which search term caused which playlists to be saved.
+    """
+    # This will keep Users and vibes together with the playlists so that we can track everything together when loading playlists
+    user_vibe = models.ForeignKey(UserVibe, on_delete=models.CASCADE, related_name='UserVibes_playlists', null=True)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user_vibe', 'playlist')
+
+    def __str__(self):
+        return f"{self.user_vibe.user.username} - {self.user_vibe.vibe.name} - {self.playlist.name}"
+
 
 
 class UserXTrack(models.Model):
     """
-    Model representing the many-to-many relationship between users and tracks.
+    Model representing the many-to-many relationships between users and tracks.
     """
     user = models.ForeignKey(User, related_name='user_tracks', on_delete=models.CASCADE)
     track = models.ForeignKey(Track, related_name='track_users', on_delete=models.CASCADE)
@@ -156,44 +208,6 @@ class TrackSearchResult(models.Model):
 
     def __str__(self):
         return f"Query: {self.query} - Track: {self.track.name}"
-    
-
-class Vibe(models.Model):
-    """
-    Model representing a recommendation algorithm.
-    """
-    name = models.CharField(max_length=255)
-    # Can't be blank apparently, so I'm adding a blank default
-    description = models.TextField(blank=True, default='')  # Description of the algorithm
-    # The algorithm used for recommendations (e.g., collaborative filtering, content-based)
-    algorithm_type = models.CharField(max_length=255, blank=True)
-
-    callback = models.CharField(max_length=255, blank=True)  # Callback function for the algorithm
-
-    def execute_callback(self, **kwargs):
-        """
-        Execute the callback function for the algorithm.
-        This function basically recieves a bunch of arguments for its creation 
-        and when executed can call the function specified in the callback field.
-        It imports the module and calls the method specified in the callback field.
-
-        """
-    # Check whether we specified by a module and a method
-        modules = self.callback.split('.')
-
-        # The actual method is at the end
-        method = modules.pop()
-
-        module = import_module('.'.join(modules))
-
-        function = getattr(module, method)
-
-        result = function(self, **kwargs)
-
-        return result
-
-        # Call the callback function with the request and optional parameters
-
 
 class TrackCoefficient(models.Model):
     """
@@ -216,15 +230,4 @@ class TrackCoefficient(models.Model):
         ordering = ['-coefficient']
         # Order by coefficient in descending order
 
-class UserVibe(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_vibes')
-    vibe = models.ForeignKey(Vibe, on_delete=models.CASCADE, related_name='vibe_users')
-    search_term = models.CharField(max_length=255)  # This is the "vibe" search query
 
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'vibe')  # Prevent duplicates
-
-    def __str__(self):
-        return f"{self.user.username} - {self.vibe.name} ({self.search_term})"

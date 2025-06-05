@@ -24,58 +24,52 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 # This section is for searching for playlists and tracks
 # and saving them to the database
 
-def search_playlists(query, limit=25):
+def search_playlists(query, max_total=1000):
     offset = 0
     saved_playlists = []
 
-    while len(saved_playlists) < limit:
+    while True:
         try:
             print(f"\nFetching playlists with offset {offset}...")
+
             results = sp.search(
                 q=query,
                 type='playlist',
-                limit=min(50, limit - len(saved_playlists)),
+                limit=50,  # Spotify max limit per request
                 offset=offset
             )
 
-            # Debug the raw structure
-            print(f"Raw result keys: {results.keys()}")
-            print(f"Playlists key: {results.get('playlists')}")
-            if not results.get('playlists'):
-                print("No 'playlists' key or it's None!")
-                break
-
-            playlists = results['playlists'].get('items', [])
+            playlists = results.get('playlists', {}).get('items', [])
             if not playlists:
-                print("No playlist items found.")
+                print("No more playlist items found.")
                 break
 
             for p in playlists:
-                if p is None:
+                if not p:
                     continue
-                
-                try:
-                    owner_info = p.get('owner') or {}
-                    tracks_info = p.get('tracks') or {}
 
+                try:
                     playlist_data = {
-                        'spotify_id': p.get('id', 'Unknown'),
-                        'name': p.get('name', 'Unknown'),
-                        'owner': owner_info.get('display_name', 'Unknown'),
-                        'track_count': tracks_info.get('total', 0),
+                        'spotify_id': p.get('id'),
+                        'name': p.get('name'),
+                        'owner': p.get('owner', {}).get('display_name', 'Unknown'),
+                        'track_count': p.get('tracks', {}).get('total', 0),
                     }
 
                     obj, created = Playlist.objects.get_or_create(
                         spotify_id=playlist_data['spotify_id'],
                         defaults=playlist_data
                     )
-                    print(f"Saving playlist: {playlist_data['name']} - Created: {created}")
                     saved_playlists.append(obj)
 
                 except Exception as e:
                     print(f"Error saving playlist {p.get('name', 'Unknown')}: {str(e)}")
 
-            offset += len(playlists)
+            offset += 50
+
+            # Spotify search API hard limit is 1000 results
+            if offset >= max_total or results['playlists'].get('next') is None:
+                break
 
         except Exception as e:
             print(f"Error fetching playlists: {str(e)}")
@@ -83,7 +77,7 @@ def search_playlists(query, limit=25):
 
     return saved_playlists
 
-def search_tracks(query, limit=25):
+def search_tracks(query, limit=50):
     offset = 0
     saved_tracks = []
 

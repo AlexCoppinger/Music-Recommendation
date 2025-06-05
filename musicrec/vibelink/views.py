@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .spotify import search_playlists, search_tracks 
 from .spotify import get_spotify_oauth, get_spotify_client
 from .forms import CustomUserCreationForm, TrackRatingForm
-from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe
+from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe, UserPlaylist
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -14,7 +14,8 @@ import spotipy
 import uuid
 import json
 
-
+# The following function are irrelevant to our app now
+# They're just here for reference:
 
 def playlist_search_view(request):
     print("search_spotify_playlists called")
@@ -40,20 +41,7 @@ def track_search_view(request):
 def home(request):
     return render(request, 'vibelink/home.html')
 
-# Register view: 
-
-def register(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Registration successful!')
-            return redirect('vibelink:home')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'vibelink/register.html', {'form': form})
-
+# Functions from here on our are relevant to our app
 # Spotify login trigger and callback views:
 
 def spotify_login(request):
@@ -72,11 +60,11 @@ def spotify_logout(request):
     # Store the Spotify access token to revoke it
         access_token = request.user.spotify_access_token
     
-    
+    # logout using Django's logout function stuff
     logout(request)
 
     response = redirect('vibelink:home')
-    response.delete_cookie('sessionid')  # Explicitly delete session cookie
+    response.delete_cookie('sessionid')  # Explicitly delete session cookie because of login issues
 
     messages.success(request, 'You have been logged out.')
     return response
@@ -107,7 +95,7 @@ def spotify_callback(request):
             # Get profile image if available
             profile_image_url = None
             if profile['images'] and len(profile['images']) > 0:
-                profile_image_url = profile['images'][0]['url']
+                profile_image_url = profile['images'][0]['url'] 
         except Exception as e:
             return render(request, "vibelink/error.html", {"message": f"Spotify token error: {e}"})
 
@@ -123,7 +111,7 @@ def spotify_callback(request):
                 'uri': uri,
                 'spotify_access_token': access_token,
                 'spotify_refresh_token': refresh_token,
-                'profile_image': profile_image_url,
+                'profile_image': profile_image_url, # If there is no spotify image, ChatGPT found a link to a generic one that can be used
             }
         )
 
@@ -140,12 +128,7 @@ def spotify_callback(request):
         if next_url:
             return redirect(next_url)
         
-        return redirect('vibelink:home')
-    
-def populate_playlist():
-
-    pass 
-    
+        return redirect('vibelink:home')    
 
 # Because there keeps being that stupid user error
 def refresh_spotify_token(user):
@@ -161,6 +144,110 @@ def refresh_spotify_token(user):
         print(f"Error refreshing token: {str(e)}")
         return False
     return False
+
+# This gets onto vibes.html and gets all the vibes from the user
+@login_required
+def vibes_view(request):
+    user = request.user # Get the user
+    user_vibes = UserVibe.objects.filter(user=user) # Get the vibes from the user
+
+    
+    return render(request, 'vibelink/vibes.html', {
+        'vibes': user_vibes, # Pass the vibes to the template (if they even have any)
+        'has_vibes': user_vibes.exists() # Check if the user even has vibes
+    })
+
+# This creates a new vibe from vibes.html on new_vibe.html
+@login_required
+def new_vibe_view(request):
+    user = request.user
+
+    if request.method == 'POST':
+        vibe_name = request.POST.get('vibe_name') # get the name for Vibe
+        search_term = request.POST.get('search_term') # get the search term for UserVibe
+        description = request.POST.get('description') # get the description for Vibe
+
+        if vibe_name and search_term:
+            # Check if you received the vibe and search term
+                vibe = Vibe.objects.create(name=vibe_name, description=description)
+                user_vibe = UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
+
+                sp = get_spotify_client(request) # Used for later potentially
+
+                playlists = search_playlists(query=search_term) # Search for playlists (although it'll only return up to 1000)
+
+                for playlist in playlists:
+                    UserPlaylist.objects.get_or_create(
+                    playlist=playlist,
+                    defaults={'user_vibe': user_vibe}
+                ) # Create a UserPlaylist object for each playlist found
+                # and Populate it with all the playists that match the search_term
+
+                print("Vibe Created")
+                return redirect('vibelink:vibes')
+
+    return render(request, 'vibelink/new_vibe.html')
+
+# To update the description of a vibe on vibe_detail.html (this will use other urls, but there is no need for confusion on the user side of things)
+@login_required
+def update_vibe_description(request, vibe_id):
+    """Update the description of a vibe"""
+    if request.method == 'POST':
+        try:
+            # Get the vibe object
+            vibe = get_object_or_404(Vibe, id=vibe_id)
+            
+            # Check if the user has access to this vibe
+            user_vibe = UserVibe.objects.filter(user=request.user, vibe=vibe).first()
+            if not user_vibe:
+                return JsonResponse({'success': False, 'error': 'You do not have access to this vibe'}, status=403)
+            
+            # Parse the JSON data from the request
+            data = json.loads(request.body)
+            new_description = data.get('description', '')
+            
+            # Update the vibe description
+            vibe.description = new_description
+            vibe.save()
+            
+            return JsonResponse({'success': True}) # Apparently this is useful
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500) # And this
+            
+    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405) # And this
+
+# To access the details of a vibe on vibe_detail.html
+@login_required
+def vibe_detail_view(request, vibe_name):
+    # Get the user and vibe objects
+    user = request.user
+    
+    # First try to get the UserVibe object which contains the relationship
+    user_vibe = get_object_or_404(UserVibe, user=user, vibe__name=vibe_name)
+    
+    # Pass both the vibe and the user_vibe to the template
+    return render(request, 'vibelink/vibe_detail.html', {
+        'vibe': user_vibe.vibe, 
+        'description': user_vibe.vibe.description, # This is the description of the vibe
+        'user_vibe': user_vibe, # This may be unnecessary
+        'search_term': user_vibe.search_term # This may also be unnecessary
+    })
+
+# To delete a vibe on the vibes page
+@login_required
+def delete_vibe_view(request, uservibe_id):
+    user_vibe = get_object_or_404(UserVibe, id=uservibe_id, user=request.user)
+    if request.method == 'POST':
+        vibe = user_vibe.vibe
+        user_vibe.delete()
+
+        if not UserVibe.objects.filter(vibe=vibe).exists():
+            vibe.delete()
+
+    return redirect('vibelink:vibes')
+
+# Onwards is a bunch of stuff related to playing/rating tracks:
 
 @login_required
 def play_track(request):
@@ -210,9 +297,9 @@ def play_track(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
+# This submits a rating:
 @login_required
 def submit_rating(request):
-    """Handle track rating submission"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -229,7 +316,7 @@ def submit_rating(request):
                 # The rating is not used because that's the name in the models.py module
                 user=request.user,
                 track=track,
-                defaults={'rating': rating_value}
+                defaults={'rating': rating_value} # Stupid debugging took forever just beceause I accidentally put 'rating_value' instead of 'rating' 
             )
             
             return JsonResponse({
@@ -245,117 +332,10 @@ def submit_rating(request):
     
     return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
+# This is going to be so edited:
 @login_required
 def rate_song_view(request):
-    # This was a prototype:
-    # We must populate track with a track that is in a specific playlist 
-    # The playlist 
-
-    # Get the next track from the next in the algorithm
 
     track = Track.objects.first()
-    
-    # The user can add the track that they want on spotify itself
 
-    # The user will then rate the song (and this function will have to receive the )
-
-    
-    # if not track:
-    #     # Create a sample track with a known working preview URL
-    #     track = Track.objects.create(
-    #         spotify_id="6rqhFgbbKwnb9MLmUQDhG6",
-    #         name="Elephant",
-    #         artist="Tame Impala",
-    #         album="Lonerism",
-    #         duration_ms=247680,
-    #         uri="spotify:track:6rqhFgbbKwnb9MLmUQDhG6",
-    #         preview_url="https://p.scdn.co/mp3-preview/8d3df1c64907cb183172b0dc51a7d9e801a9ccf6"
-    #     )
-    
     return render(request, 'vibelink/rate.html', {'track': track})
-
-@login_required
-def vibes_view(request):
-    user = request.user # Get the user
-    user_vibes = UserVibe.objects.filter(user=user) # Get the vibes from the user
-
-    
-    return render(request, 'vibelink/vibes.html', {
-        'vibes': user_vibes, # Pass the vibes to the template (if they even have any)
-        'has_vibes': user_vibes.exists() # Check if the user even has vibes
-    })
-
-@login_required
-def new_vibe_view(request):
-    user = request.user
-
-    if request.method == 'POST':
-        vibe_name = request.POST.get('vibe_name') # get the name for Vibe
-        search_term = request.POST.get('search_term') # get the search term for UserVibe
-        description = request.POST.get('description') # get the description for Vibe
-        print("description: ", description)
-        print("from: ", vibe_name)
-        if vibe_name and search_term:
-            # Check if you received the vibe and search term
-                vibe = Vibe.objects.create(name=vibe_name, description=description)
-                UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
-                print("Vibe Created")
-                return redirect('vibelink:vibes')
-
-    return render(request, 'vibelink/new_vibe.html')
-
-@login_required
-def update_vibe_description(request, vibe_id):
-    """Update the description of a vibe"""
-    if request.method == 'POST':
-        try:
-            # Get the vibe object
-            vibe = get_object_or_404(Vibe, id=vibe_id)
-            
-            # Check if the user has access to this vibe
-            user_vibe = UserVibe.objects.filter(user=request.user, vibe=vibe).first()
-            if not user_vibe:
-                return JsonResponse({'success': False, 'error': 'You do not have access to this vibe'}, status=403)
-            
-            # Parse the JSON data from the request
-            data = json.loads(request.body)
-            new_description = data.get('description', '')
-            
-            # Update the vibe description
-            vibe.description = new_description
-            vibe.save()
-            
-            return JsonResponse({'success': True})
-            
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-            
-    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
-
-@login_required
-def vibe_detail_view(request, vibe_name):
-    # Get the user and vibe objects
-    user = request.user
-    
-    # First try to get the UserVibe object which contains the relationship
-    user_vibe = get_object_or_404(UserVibe, user=user, vibe__name=vibe_name)
-    
-    # Pass both the vibe and the user_vibe to the template
-    return render(request, 'vibelink/vibe_detail.html', {
-        'vibe': user_vibe.vibe, 
-        'description': user_vibe.vibe.description, # This is the description of the vibe
-        'user_vibe': user_vibe, # This may be unnecessary
-        'search_term': user_vibe.search_term # This may also be unnecessary
-    })
-
-@login_required
-def delete_vibe_view(request, uservibe_id):
-    user_vibe = get_object_or_404(UserVibe, id=uservibe_id, user=request.user)
-    if request.method == 'POST':
-        vibe = user_vibe.vibe
-        user_vibe.delete()
-
-        if not UserVibe.objects.filter(vibe=vibe).exists():
-            vibe.delete()
-
-    return redirect('vibelink:vibes')
