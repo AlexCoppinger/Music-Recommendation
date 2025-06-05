@@ -1,6 +1,8 @@
-from vibelink.models import Vibe, TrackCoefficient, Track, TrackRating, PlaylistSearchResult, TrackXPlaylist
+from vibelink.models import Vibe, TrackCoefficient, Track, TrackRating, PlaylistSearchResult, TrackPlaylist, UserVibePlaylist, UserVibe
 from django.db.models import Count
 
+
+# This is just to make sure that we use the proper algorithm. However, in the future, other algorithms may end up getting used
 def update_track_weights(request, **kwargs):
     """
     Update the track weights in the TrackCoefficient model.
@@ -12,7 +14,7 @@ def update_track_weights(request, **kwargs):
     if not algorithm_name:
         # Don't touch the weights
         algorithm_name = 'popular_relation'
-    
+
     algorithm = Vibe.objects.get(name=algorithm_name)
 
     # Use the algorithm's callback function to update the coefficient
@@ -21,52 +23,83 @@ def update_track_weights(request, **kwargs):
     return success
 
 
-# Define our popular relation function
-def popular_relation(algorithm, **kwargs):
+def popular_relation(**kwargs):
     """
     Update the track weights based on the popular relation algorithm.
     """
+
     trackrating = kwargs.get('track_rating', None)
     if not trackrating:
+        print("No trackrating provided.")
         return False
     
-    # Get the track from the trackrating
+    print("popular_relation: called with track:", trackrating.track.name, "by user:", trackrating.user.username)
+    print("popular_relation rating:", trackrating.rating)
+    user = trackrating.user
     track = trackrating.track
 
-    # Get the selected purpose from the request
-    purpose = trackrating.purpose
+    # Get all vibes the user is participating in
+    user_vibes = UserVibe.objects.filter(user=user)
 
-    # Fetch the tracks for the playlists that match the query
-    playlists = TrackXPlaylist.objects.filter(track=track, playlist__playlistsearchresult__query=purpose.name).values_list('playlist', flat=True).distinct()
+    print(f"Found {user_vibes.count()} UserVibe(s) for user {user.username}")
 
-    # Get the playlists that match the query
-    txp = TrackXPlaylist.objects.filter(playlist__in=playlists)
+    if not user_vibes.exists():
+        print("No user vibes found.")
+        return False
 
-    # Tally up the number of times a track appears across the playlists
-    # Determine the most commonly used tracks
+    # Get playlists associated with those vibes that include this track
+    playlist_ids = UserVibePlaylist.objects.filter(
+        user_vibe__in=user_vibes,
+        playlist__trackplaylist__track=track
+    ).values_list('playlist_id', flat=True).distinct()
+
+    print(f"Playlist IDs containing the rated track: {list(playlist_ids)}")
+
+
+    # Now get all TrackPlaylist entries for these playlists
+    txp = TrackPlaylist.objects.filter(playlist_id__in=playlist_ids)
+
+    # Tally how many times each track appears
     annotated_tracks = txp.values('track').annotate(count=Count('track'))
 
-    # Define a scaling factor lambda that implements a sigmoid function
+    print(f"Updating coefficients for {len(annotated_tracks)} tracks")
+
+
+    # Define a sigmoid-like scaling function
     scaling_factor = lambda x: 1 / (1 + (1 / (1 + x))) - 0.5
 
-    # Extract the maximum value from the rating choices
+    # Determine rating scale
+
+    print("right before scaling factor")
     max_value = max([choice[0] for choice in TrackRating.RATING_CHOICES])
-
-    # Get the mean choice value
     mean_choice_value = sum([choice[0] for choice in TrackRating.RATING_CHOICES]) / len(TrackRating.RATING_CHOICES)
+    print("after scaling factor")
 
-    # Apply the liking rating
-    like_scaling = max_value - trackrating.like_rating + 1 - mean_choice_value
+    print(f"here is trackrating:", trackrating.rating)
+    print(f"max_value: {max_value}, mean_choice_value: {mean_choice_value}")
 
-    # Loop over tracks and update the weights
-    for track in annotated_tracks:
-        # Get the track coefficient object
-        track_coefficient, created = TrackCoefficient.objects.get_or_create(track=Track.objects.get(pk=track['track']), user=trackrating.user, algorithm=algorithm)
+    # Calculate the rating difference
+    like_scaling = float(max_value) - float(trackrating.rating) + 1.0 - mean_choice_value
 
-        # Update the coefficient value based on the rating
-        track_coefficient.coefficient += scaling_factor(track['count']) * like_scaling
+    print("After like_scaling calculation")
 
-        # Save the updated coefficient value
-        track_coefficient.save()
+    # Loop and update coefficients
+    for entry in annotated_tracks:
+        print("got into loop for entry:")
+        other_track = Track.objects.get(pk=entry['track'])
+        print("processing track")
+        for user_vibe in user_vibes:
+            coeff, _ = TrackCoefficient.objects.get_or_create(
+                track=other_track,
+                user=user,
+                vibe=user_vibe.vibe
+            )
+            print("updating coefficient for track")
+            coeff.coefficient += scaling_factor(entry['count']) * like_scaling
+            coeff.save()
+            print("coefficient updated")
+
+    print("popular_relation: finished coefficient updates.")
+
 
     return True

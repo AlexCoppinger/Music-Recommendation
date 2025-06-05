@@ -1,14 +1,16 @@
 from django.shortcuts import render, redirect
-from .spotify import search_playlists, search_tracks 
-from .spotify import get_spotify_oauth, get_spotify_client
+from .spotify import import_items
+from .spotify import get_spotify_oauth, get_spotify_client, import_playlist_tracks
 from .forms import CustomUserCreationForm, TrackRatingForm
-from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe, UserPlaylist
+from .models import User, Playlist, Track, TrackRating, Vibe, UserVibe, UserVibePlaylist, TrackCoefficient, TrackPlaylist
+from .algorithms import popular_relation
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db import transaction 
 
 import spotipy 
 import uuid
@@ -17,26 +19,26 @@ import json
 # The following function are irrelevant to our app now
 # They're just here for reference:
 
-def playlist_search_view(request):
-    print("search_spotify_playlists called")
-    query = request.GET.get('query', '')
-    playlists = []
-    if query:
-        try:
-            playlists = search_playlists(query)
-        except Exception as e:
-            return render(request, 'vibelink/search.html', {'error': str(e)})
-    return render(request, 'vibelink/search.html', {'playlists': playlists})
+# def playlist_search_view(request):
+#     print("search_spotify_playlists called")
+#     query = request.GET.get('query', '')
+#     playlists = []
+#     if query:
+#         try:
+#             playlists = search_playlists(query)
+#         except Exception as e:
+#             return render(request, 'vibelink/search.html', {'error': str(e)})
+#     return render(request, 'vibelink/search.html', {'playlists': playlists})
 
-def track_search_view(request):
-    query = request.GET.get('query', '')
-    tracks = []
-    if query:
-        try:
-            tracks = search_tracks(query)
-        except Exception as e:
-            return render(request, 'vibelink/search.html', {'error': str(e)})
-    return render(request, 'vibelink/search.html', {'tracks': tracks})
+# def track_search_view(request):
+#     query = request.GET.get('query', '')
+#     tracks = []
+#     if query:
+#         try:
+#             tracks = search_tracks(query)
+#         except Exception as e:
+#             return render(request, 'vibelink/search.html', {'error': str(e)})
+#     return render(request, 'vibelink/search.html', {'tracks': tracks})
 
 def home(request):
     return render(request, 'vibelink/home.html')
@@ -163,28 +165,39 @@ def new_vibe_view(request):
     user = request.user
 
     if request.method == 'POST':
-        vibe_name = request.POST.get('vibe_name') # get the name for Vibe
-        search_term = request.POST.get('search_term') # get the search term for UserVibe
-        description = request.POST.get('description') # get the description for Vibe
+        vibe_name = request.POST.get('vibe_name')  # Name for Vibe
+        search_term = request.POST.get('search_term')  # Search term for UserVibe
+        description = request.POST.get('description')  # Optional description
 
         if vibe_name and search_term:
-            # Check if you received the vibe and search term
-                vibe = Vibe.objects.create(name=vibe_name, description=description)
-                user_vibe = UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
+            # Create Vibe and UserVibe
+            vibe = Vibe.objects.create(name=vibe_name, description=description)
+            user_vibe = UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
 
-                sp = get_spotify_client(request) # Used for later potentially
+            # Import playlists and tracks from Spotify
+            context = import_items(query=search_term, type='playlist')
 
-                playlists = search_playlists(query=search_term) # Search for playlists (although it'll only return up to 1000)
-
-                for playlist in playlists:
-                    UserPlaylist.objects.get_or_create(
+            # Associate playlists with UserVibe
+            for playlist in context['playlists']:
+                UserVibePlaylist.objects.get_or_create(
                     playlist=playlist,
                     defaults={'user_vibe': user_vibe}
-                ) # Create a UserPlaylist object for each playlist found
-                # and Populate it with all the playists that match the search_term
+                )
 
-                print("Vibe Created")
-                return redirect('vibelink:vibes')
+            # Associate tracks with Vibe & User
+            track_coefficients = [
+                TrackCoefficient(
+                    track=track,
+                    user=user,
+                    vibe=vibe,
+                    coefficient=0.0
+                )
+                for track in context['tracks']
+            ]
+            TrackCoefficient.objects.bulk_create(track_coefficients, ignore_conflicts=True)
+
+            print("Vibe and coefficients created.")
+            return redirect('vibelink:vibes')
 
     return render(request, 'vibelink/new_vibe.html')
 
@@ -299,43 +312,57 @@ def play_track(request):
 
 # This submits a rating:
 @login_required
-def submit_rating(request):
+def rate_song_view(request):
+    user = request.user
+
+    # Get the Vibe the user is rating from session or a query param
+    vibe_id = request.session.get('vibe')
+    if not vibe_id:
+        return JsonResponse({'error': 'No selected vibe'}, status=400)
+
+    vibe = get_object_or_404(Vibe, id=vibe_id)
+
+    # If this is a rating submission (POST via AJAX or form)
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             track_id = data.get('track_id')
             rating_value = data.get('rating')
-            
-            if not track_id or not rating_value:
+
+            if not track_id or rating_value is None:
                 return JsonResponse({'success': False, 'error': 'Missing track_id or rating'}, status=400)
-            
+
             track = Track.objects.get(id=track_id)
-            
-            # Save or update the rating
-            rating, created = TrackRating.objects.update_or_create(
-                # The rating is not used because that's the name in the models.py module
-                user=request.user,
-                track=track,
-                defaults={'rating': rating_value} # Stupid debugging took forever just beceause I accidentally put 'rating_value' instead of 'rating' 
-            )
-            
-            return JsonResponse({
-                'success': True, 
-                'message': 'Rating saved',
-                'created': created
-            })
-            
+
+            with transaction.atomic():
+                trackrating, created = TrackRating.objects.update_or_create(
+                    user=user,
+                    track=track,
+                    defaults={'rating': rating_value}
+                )
+
+                # Update the coefficients based on the rating
+                popular_relation(track_rating=trackrating)
+
+            return JsonResponse({'success': True, 'created': created})
+
         except Track.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Track not found'}, status=404)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
-    
-    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
-# This is going to be so edited:
-@login_required
-def rate_song_view(request):
+    # GET request: Get the next track to rate (highest coefficient for this user + vibe)
+    try:
+        next_track = (TrackCoefficient.objects
+            .filter(user=user, vibe=vibe)
+            .exclude(track__trackrating__user=user)  # Skip already rated tracks
+            .order_by('-coefficient')
+            .first())
 
-    track = Track.objects.first()
+        if not next_track:
+            return render(request, 'vibelink/done_rating.html')  # Optionally render a done page
 
-    return render(request, 'vibelink/rate.html', {'track': track})
+        return render(request, 'vibelink/rate.html', {'track': next_track.track})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

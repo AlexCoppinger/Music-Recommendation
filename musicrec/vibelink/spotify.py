@@ -4,7 +4,7 @@ from spotipy.cache_handler import MemoryCacheHandler
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from .models import User
+from .models import User, TrackSearchResult, PlaylistSearchResult
 from django.conf import settings
 from .models import Track, Playlist, User, TrackPlaylist, Vibe
 
@@ -24,101 +24,123 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 # This section is for searching for playlists and tracks
 # and saving them to the database
 
-def search_playlists(query, max_total=1000):
-    offset = 0
-    saved_playlists = []
+def import_items(query, type, force_new=False):
+    """
+    Import items from Spotify based on the query and type.
+    """
+    # Get a Spotify client
+    sp = get_spotify_client()
 
-    while True:
-        try:
-            print(f"\nFetching playlists with offset {offset}...")
+    # Run our search
+    results = sp.search(q=query, type=type, limit=50)
 
-            results = sp.search(
-                q=query,
-                type='playlist',
-                limit=50,  # Spotify max limit per request
-                offset=offset
-            )
+    # Initialize our context
+    context = {
+        'playlists': [],
+        'tracks': [],
+        'query': query,
+        'type': type,
+        'force_new': force_new,
+        'using_existing_search_results': not force_new,
+    }
 
-            playlists = results.get('playlists', {}).get('items', [])
-            if not playlists:
-                print("No more playlist items found.")
-                break
+    # Check whether we've imported items for this search query
+    done = False
+    if not force_new:
+        if type == 'track':
+            existing_search_results
+        else:
+            existing_search_results = PlaylistSearchResult.objects.filter(query=query)
 
-            for p in playlists:
-                if not p:
-                    continue
+        if existing_search_results.exists():
+            context['using_existing_search_results'] = True
+            context[f"{type}s"] = existing_search_results.values_list(type, flat=True)
+            done = True
 
-                try:
-                    playlist_data = {
-                        'spotify_id': p.get('id'),
-                        'name': p.get('name'),
-                        'owner': p.get('owner', {}).get('display_name', 'Unknown'),
-                        'track_count': p.get('tracks', {}).get('total', 0),
-                    }
+        else:
+            context['using_existing_search_results'] = False
 
-                    obj, created = Playlist.objects.get_or_create(
-                        spotify_id=playlist_data['spotify_id'],
-                        defaults=playlist_data
-                    )
-                    saved_playlists.append(obj)
 
-                except Exception as e:
-                    print(f"Error saving playlist {p.get('name', 'Unknown')}: {str(e)}")
+    # We are going to search until there are no more results
+    is_first = True
+    while not done:
+        if is_first:
+            # Search for the first batch of results
+            results = sp.search(q=query, type=type, limit=50)
+            is_first = False
 
-            offset += 50
+        else:
+            # Search for the next batch of results
+            results = sp.next(curr_results)
 
-            # Spotify search API hard limit is 1000 results
-            if offset >= max_total or results['playlists'].get('next') is None:
-                break
+        curr_results = results[f"{type}s"]
 
-        except Exception as e:
-            print(f"Error fetching playlists: {str(e)}")
+        # Extract the items from the results
+        items = curr_results['items']
+        if not items:
+            done = True
             break
 
-    return saved_playlists
+        for item in items:
+            if not item:
+                continue
 
-def search_tracks(query, limit=50):
-    offset = 0
-    saved_tracks = []
+            if type == 'playlist':
+                if settings.DEBUG:
+                    print(f"Importing playlist: {item['name']}")
 
-    while len(saved_tracks) < limit:
-        try:
-            results = sp.search(q=query, type='track', limit=min(50, limit - len(saved_tracks)), offset=offset)
-            tracks = results['tracks']['items']
-
-            if not tracks:
-                break  # No more tracks to fetch
-
-            for track in tracks:
-                try:
-                    # Safely handle missing fields
-                    track_data = {
-                        'spotify_id': track.get('id', 'Unknown'),
-                        'name': track.get('name', 'Unknown'),
-                        'artist': track['artists'][0]['name'] if track.get('artists') and len(track['artists']) > 0 else 'Unknown',
-                        'album': track['album']['name'] if track.get('album') else 'Unknown',
-                        'duration_ms': track.get('duration_ms', 0),
-                        'uri': track.get('uri', 'Unknown'),
-                        'preview_url': track.get('preview_url', None),
+                # Add the playlist to our database
+                p, _ = Playlist.objects.update_or_create(
+                    spotify_id=item['id'],
+                    defaults={
+                        'name': item['name'],
+                        'description': item.get('description', ''),
+                        'image_url': item['images'][0]['url'] if item['images'] else '',
                     }
-                    obj, created = Track.objects.get_or_create(
-                        spotify_id=track_data['spotify_id'],
-                        defaults=track_data
-                    )
-                    saved_tracks.append(obj)
-                    print(f"Saving track: {track_data['name']} - Created: {created}")
-                except Exception as e:
-                    print(f"Error saving track {track.get('name', 'Unknown')}: {str(e)}")
+                )
 
-            offset += len(tracks)
-        except Exception as e:
-            print(f"Error fetching tracks: {str(e)}")
-            break
+                # Import our playlist tracks
+                txp = import_playlist_tracks(p)
 
-    return saved_tracks
+                # Update our track list
+                context['tracks'].extend([t.track.id for t in txp])
 
+                # Add the playlist to our context
+                context['playlists'].append(p.id)
 
+                # Associate the playlist with the search query
+                psr, _ = PlaylistSearchResult.objects.get_or_create(query=query, playlist=p)
 
+            elif type == 'track':
+                # Add track to the database
+                t, _ = Track.objects.update_or_create(
+                    name=item['name'],
+                    spotify_id=item['id'],
+                    uri=item['uri'],
+                    defaults={
+                        'artist': item['artists'][0]['name'],
+                        'album': item['album']['name'],
+                        'duration_ms': item['duration_ms'],
+                        'preview_url': item['preview_url'],
+                    }
+                )
+                # Add the track to our context
+                context['tracks'].append(t.id)
+
+                # Associate the track with the search query
+                tsr, _ = TrackSearchResult.objects.get_or_create(query=query, track=t)
+
+        # Check if there are more results
+        if not curr_results['next']:
+            # If there are no more results, set done to True
+            done = True
+
+    # Convert the context lists to QuerySets
+    context['playlists'] = Playlist.objects.filter(id__in=context['playlists'])
+    context['tracks'] = Track.objects.filter(id__in=context['tracks'])
+
+    # Return the context
+    return context
 
 
 # This section will be to login and authenticate the user
@@ -162,70 +184,73 @@ def get_spotify_client(request=None):
 
 
 # Method to fecth tracks from a playlist
-def get_playlist_tracks(playlist_id):
+def import_playlist_tracks(playlist):
     """
-    Fetch all tracks from a specific playlist and save them to the database.
-    """
-    saved_tracks = []
-    offset = 0
+    Import tracks from a Spotify playlist into the database.
     
-    while True:
-        try:
-            results = sp.playlist_tracks(
-                playlist_id,
-                offset=offset,
-                fields='items(track(id,name,artists,album,duration_ms,uri,preview_url))'
-            )
+    Args:
+        playlist (dict): The playlist data from Spotify API.
+    """
+    # Get the Spotify client
+    sp = get_spotify_client()
+    
+    done = False
+    result = None
+
+    while not done:
+        if not result:
+            # Get the first tracks from the playlist
+            result = sp.playlist_tracks(playlist.spotify_id)    
+        else:
+            # Get the next tracks from the playlist
+            result = sp.next(result)
+        
+        track_num = 0
+        # Iterate through the tracks and import them
+        for item in result['items']:
+            track = item['track']
+
+            if not track:
+                continue
             
-            if not results['items']:
-                break
+            # Create or update the track in the database
+            t, _ = Track.objects.update_or_create(
+                spotify_id=track['id'],
+                defaults={
+                    'name': track['name'],
+                    'artist': track['artists'][0]['name'],
+                    'album': track['album']['name'],
+                    'duration_ms': track['duration_ms'],
+                    'preview_url': track.get('preview_url'),
+                }
+            )
 
-            for item in results['items']:
-                track = item.get('track')
-                if track is None:
-                    continue
+            # Increment the track number
+            track_num += 1
 
-                try:
-                    # Make sure all track data is properly extracted
-                    track_data = {
-                        'spotify_id': track.get('id', 'Unknown'),
-                        'name': track.get('name', 'Unknown'),
-                        'artist': track['artists'][0]['name'] if track.get('artists') and track['artists'] else 'Unknown',
-                        'album': track['album'].get('name', 'Unknown') if track.get('album') else 'Unknown',
-                        'duration_ms': track.get('duration_ms', 0),
-                        'uri': track.get('uri', 'Unknown'),
-                        'preview_url': track.get('preview_url'),
-                    }
+            # Create our TrackXPlaylist object
+            txp, _ = TrackPlaylist.objects.update_or_create(
+                track=t,
+                playlist=playlist,
+                defaults={
+                    'order': track_num,
+                }
+            )
 
-                    # Save track first
-                    track_obj, created = Track.objects.get_or_create(
-                        spotify_id=track_data['spotify_id'],
-                        defaults=track_data
-                    )
 
-                    # Get playlist and create relationship
-                    playlist = Playlist.objects.get(spotify_id=playlist_id)
-                    TrackPlaylist.objects.get_or_create(
-                        track=track_obj,
-                        playlist=playlist
-                    )
+            # Don't have time to figure this out
+            # if settings.DEBUG:
+            #     print(f"Importing track {track_num}: {t.name} from playlist: {playlist.name}")
 
-                    saved_tracks.append(track_obj)
-                    print(f"Saved track: {track_data['name']} to playlist: {playlist.name}")
+        # Check if there are more tracks to fetch
+        if result['next']:
+            done = False
+        else:
+            done = True
 
-                except Exception as e:
-                    print(f"Error saving track: {e}")
-                    continue
+    # Return the Playlist tracks
+    return TrackPlaylist.objects.filter(playlist=playlist).order_by('order')
 
-            offset += len(results['items'])
-            if len(results['items']) < 100:  # Spotify usually returns 100 items max
-                break
-                
-        except Exception as e:
-            print(f"Error fetching playlist tracks: {e}")
-            break
-
-    return saved_tracks
 
 def create_vibe(user, vibe_name, description):
     """

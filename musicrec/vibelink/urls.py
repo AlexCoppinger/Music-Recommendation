@@ -5,8 +5,8 @@ app_name = 'vibelink'
 
 urlpatterns = [
     # This stuff is now irrelevant to the app, but I will keep it here for reference:
-    path('search/', views.playlist_search_view, name='search_playlists'),
-    path('search/tracks/', views.track_search_view, name='search_tracks'),  # Updated path
+    #path('search/', views.playlist_search_view, name='search_playlists'),
+    #path('search/tracks/', views.track_search_view, name='search_tracks'),  # Updated path
     path('', views.home, name='home'),
 
     # Stuff for authentication:
@@ -24,7 +24,6 @@ urlpatterns = [
     # Add a path to rate the song for the specific algorithm/user
     path('rate/song', views.rate_song_view, name='rate_song'),
     path('play-track/', views.play_track, name='play_track'),
-    path('submit-rating/', views.submit_rating, name='submit_rating'),
     
 ]
 

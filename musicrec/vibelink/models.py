@@ -32,27 +32,35 @@ class Track(models.Model):
     """
     Model representing a track in a Spotify playlist.
     """
-    spotify_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
-    artist = models.CharField(max_length=255, null=True, blank=True)
+    artist = models.CharField(max_length=255, blank=True, default='', null=True)
     album = models.CharField(max_length=255)
-    duration_ms = models.IntegerField(null=True)  # Add this
-    uri = models.CharField(max_length=255, null=True, blank=True)
-    preview_url = models.URLField(null=True, blank=True)
-    playlist_name = models.CharField(max_length=255, blank=True, default='', null=True)  # Name of the playlist the track belongs to
-
-    def __str__(self):
-        return f"{self.name} by {self.artist}"
+    duration_ms = models.IntegerField()
+    spotify_id = models.CharField(max_length=255, unique=True, null=True)  # Unique identifier for the track in Spotify
+    uri = models.CharField(max_length=255, blank=True, null=True)  # URI for the track in Spotify
+    preview_url = models.URLField(blank=True, null=True)  # URL for the track preview
+    
+    class Meta:
+        verbose_name = 'Track'
+        verbose_name_plural = 'Tracks'
+        ordering = ['name']
+    # Add any additional fields or methods as needed
     
     
 class Playlist(models.Model):
-    spotify_id = models.CharField(max_length=255, unique=True)
+    """
+    Model representing a Spotify playlist.
+    """
     name = models.CharField(max_length=255)
-    owner = models.CharField(max_length=255)
-    track_count = models.IntegerField()
+    description = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    spotify_id = models.CharField(max_length=255, unique=True)  # Unique identifier for the playlist in Spotify
+    uri = models.CharField(max_length=255, blank=True, null=True)  # URI for the playlist in Spotify
 
-    def __str__(self):
-        return self.name
+    class Meta:
+        verbose_name = 'Playlist'
+        verbose_name_plural = 'Playlists'
+        ordering = ['name']
     
 
 # his model represents the link between tracks and playlists
@@ -63,8 +71,7 @@ class TrackPlaylist(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
 
-    # This below may not be necessary
-    # order = models.IntegerField(default=0)  # To maintain the order of tracks in the playlist
+    order = models.IntegerField(default=0)  # To maintain the order of tracks in the playlist
 
     class Meta:
         unique_together = ('track', 'playlist')
@@ -122,8 +129,8 @@ class UserVibe(models.Model):
         return f"{self.user.username} - {self.vibe.name} ({self.search_term})"
     
 
-# Create a UserPlaylist model if you need to store additional information about the relationship
-class UserPlaylist(models.Model):
+# Create a UserVibePlaylist model if you need to store additional information about the relationship
+class UserVibePlaylist(models.Model):
     """
     Model representing the many-to-many relationship between UserVibe and Playlists.
     This preserves the context of which search term caused which playlists to be saved.
@@ -230,4 +237,32 @@ class TrackCoefficient(models.Model):
         ordering = ['-coefficient']
         # Order by coefficient in descending order
 
+class PlaylistSearchResult(models.Model):
+    """
+    Model to associate a search query with imported playlists.
+    """
+    query = models.CharField(max_length=255)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('query', 'playlist')  # Ensure uniqueness of query and playlist
+
+    def __str__(self):
+        return f"Query: {self.query} - Playlist: {self.playlist.name}"
+
+
+class TrackSearchResult(models.Model):
+    """
+    Model to associate a search query with imported tracks.
+    """
+    query = models.CharField(max_length=255)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('query', 'track')  # Ensure uniqueness of query and track
+
+    def __str__(self):
+        return f"Query: {self.query} - Track: {self.track.name}"
 
