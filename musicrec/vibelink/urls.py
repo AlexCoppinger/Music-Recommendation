@@ -24,6 +24,7 @@ urlpatterns = [
     # Add a path to rate the song for the specific algorithm/user
     path('rate/song', views.rate_song_view, name='rate_song'),
     path('play-track/', views.play_track, name='play_track'),
+    path('submit-rating/', views.submit_rating, name='submit_rating'),
     
 ]
 

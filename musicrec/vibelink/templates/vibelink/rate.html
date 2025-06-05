@@ -26,49 +26,7 @@
     </div>
 </div>
 
-
-<a href="{% url 'vibelink:vibes' %}" class="button">Back to Vibes for {{ user.display_name }}</a>
-
-<style>
-    .rating-container {
-        margin-top: 30px;
-        padding: 20px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .rating-slider-container {
-        display: flex;
-        align-items: center;
-        margin: 20px 0;
-    }
-    
-    #rating-slider {
-        flex-grow: 1;
-        margin: 0 10px;
-        height: 10px;
-    }
-    
-    .rating-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #1DB954;
-        margin-left: 10px;
-        width: 30px;
-    }
-    
-    .rating-labels {
-        display: flex;
-        justify-content: space-between;
-        margin-top: -10px;
-        color: #666;
-    }
-    
-    .rating-low, .rating-high {
-        color: #888;
-    }
-</style>
+<a href="{% url 'vibelink:vibes' %}" class="button">← Back to Vibes for {{ user.display_name }}</a>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -128,8 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             if (data.success) {
                 alert('Rating submitted successfully!');
-                // Optional: Load a new track to rate
-                // window.location.reload();
+                // Load next track automatically
+                window.location.href = "{% url 'vibelink:rate_song' %}";
             } else {
                 alert('Failed to submit rating: ' + data.error);
             }
@@ -141,3 +99,57 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+<style>
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .rating-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .rating-slider-container {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+    }
+    
+    #rating-slider {
+        flex-grow: 1;
+        margin: 0 10px;
+        height: 10px;
+    }
+    
+    .rating-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1DB954;
+        margin-left: 10px;
+        width: 30px;
+    }
+    
+    .rating-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: -10px;
+        color: #666;
+    }
+    
+    .rating-low, .rating-high {
+        color: #888;
+    }
+    
+    .progress-text {
+        background-color: #e8f4f8;
+        padding: 5px 10px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+</style>

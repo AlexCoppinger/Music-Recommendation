@@ -175,16 +175,25 @@ def new_vibe_view(request):
             user_vibe = UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
 
             # Import playlists and tracks from Spotify
-            context = import_items(query=search_term, type='playlist')
+            # There seems to be some fishy stuff going on here, but I'll look over it later
+            # context = import_items(query=search_term, type='playlist')
+            # # Fishy stuff in context right now
 
-            # Associate playlists with UserVibe
-            for playlist in context['playlists']:
-                UserVibePlaylist.objects.get_or_create(
-                    playlist=playlist,
-                    defaults={'user_vibe': user_vibe}
-                )
+            # track_playlists = []  # To store TrackPlaylist objects
 
-            # Associate tracks with Vibe & User
+            # # Associate playlists with UserVibe
+            # for playlist in context['playlists']:
+            #     UserVibePlaylist.objects.get_or_create(
+            #         playlist=playlist,
+            #         defaults={'user_vibe': user_vibe}
+            #     )
+
+            #     # Import tracks from playlists and create TrackPlaylist objects
+            #     track_playlists.extend(import_playlist_tracks(playlist))
+
+            context = import_items(query=search_term, type='track')
+            print(f"list of tracks: {[track.name for track in context['tracks']]}")
+            # Associate tracks with "Vibe & User
             track_coefficients = [
                 TrackCoefficient(
                     track=track,
@@ -194,7 +203,10 @@ def new_vibe_view(request):
                 )
                 for track in context['tracks']
             ]
-            TrackCoefficient.objects.bulk_create(track_coefficients, ignore_conflicts=True)
+
+            print(f"Creating {len(track_coefficients)} TrackCoefficient objects for vibe '{vibe_name}'")
+
+            TrackCoefficient.objects.bulk_create(track_coefficients)
 
             print("Vibe and coefficients created.")
             return redirect('vibelink:vibes')
@@ -238,6 +250,8 @@ def vibe_detail_view(request, vibe_name):
     
     # First try to get the UserVibe object which contains the relationship
     user_vibe = get_object_or_404(UserVibe, user=user, vibe__name=vibe_name)
+
+    request.session['selected_vibe'] = user_vibe.vibe.id  # Store the selected vibe ID in the session
     
     # Pass both the vibe and the user_vibe to the template
     return render(request, 'vibelink/vibe_detail.html', {
@@ -310,59 +324,112 @@ def play_track(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
-# This submits a rating:
 @login_required
-def rate_song_view(request):
-    user = request.user
-
-    # Get the Vibe the user is rating from session or a query param
-    vibe_id = request.session.get('vibe')
-    if not vibe_id:
-        return JsonResponse({'error': 'No selected vibe'}, status=400)
-
-    vibe = get_object_or_404(Vibe, id=vibe_id)
-
-    # If this is a rating submission (POST via AJAX or form)
+def submit_rating(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             track_id = data.get('track_id')
             rating_value = data.get('rating')
-
-            if not track_id or rating_value is None:
+            vibe_id = request.session.get('selected_vibe')
+            
+            if not track_id or not rating_value:
                 return JsonResponse({'success': False, 'error': 'Missing track_id or rating'}, status=400)
-
+            
             track = Track.objects.get(id=track_id)
-
-            with transaction.atomic():
-                trackrating, created = TrackRating.objects.update_or_create(
-                    user=user,
-                    track=track,
-                    defaults={'rating': rating_value}
-                )
-
-                # Update the coefficients based on the rating
-                popular_relation(track_rating=trackrating)
-
-            return JsonResponse({'success': True, 'created': created})
-
+            
+            # Save or update the rating
+            rating, created = TrackRating.objects.update_or_create(
+                user=request.user,
+                track=track,
+                defaults={'rating': rating_value}
+            )
+            
+            # Store the last rated track ID in session
+            request.session['last_rated_track_id'] = track_id
+            
+            # Get next unrated track
+            if vibe_id:
+                vibe = Vibe.objects.get(id=vibe_id)
+                
+                # Get the count of tracks rated so far for this vibe
+                rated_count = TrackRating.objects.filter(
+                    user=request.user,
+                    track__trackcoefficient__vibe=vibe
+                ).count()
+                
+                # Get total tracks for this vibe
+                total_tracks = TrackCoefficient.objects.filter(
+                    vibe=vibe,
+                    user=request.user
+                ).count()
+                
+                # Check if there are more tracks to rate
+                next_track_available = rated_count < total_tracks
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Rating saved',
+                    'created': created,
+                    'next_track_available': next_track_available,
+                    'rated_count': rated_count,
+                    'total_tracks': total_tracks
+                })
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Rating saved',
+                'created': created
+            })
+            
         except Track.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Track not found'}, status=404)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
-    # GET request: Get the next track to rate (highest coefficient for this user + vibe)
-    try:
-        next_track = (TrackCoefficient.objects
-            .filter(user=user, vibe=vibe)
-            .exclude(track__trackrating__user=user)  # Skip already rated tracks
-            .order_by('-coefficient')
-            .first())
-
-        if not next_track:
-            return render(request, 'vibelink/done_rating.html')  # Optionally render a done page
-
-        return render(request, 'vibelink/rate.html', {'track': next_track.track})
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+@login_required
+def rate_song_view(request):
+    user = request.user
+    
+    # Get the vibe ID from the session
+    vibe_id = request.session.get('selected_vibe')
+    
+    if not vibe_id:
+        messages.error(request, "Please select a vibe first")
+        return redirect('vibelink:vibes')
+    
+    # Get the vibe
+    vibe = get_object_or_404(Vibe, id=vibe_id)
+    
+    # Get the ID of the last rated track (if any)
+    last_rated_track_id = request.session.get('last_rated_track_id')
+    
+    # Get all tracks for this vibe that haven't been rated by this user yet
+    rated_track_ids = TrackRating.objects.filter(
+        user=user,
+        track__trackcoefficient__vibe=vibe
+    ).values_list('track_id', flat=True)
+    
+    # Get a track coefficient that hasn't been rated yet
+    track_coefficient = TrackCoefficient.objects.filter(
+        vibe=vibe,
+        user=user
+    ).exclude(
+        track_id__in=rated_track_ids
+    ).first()
+    
+    if not track_coefficient:
+        messages.info(request, "You've rated all tracks for this vibe!")
+        return redirect('vibelink:vibe_detail', vibe_name=vibe.name)
+    
+    # Store vibe ID in session for next track
+    request.session['selected_vibe'] = vibe_id
+    
+    return render(request, 'vibelink/rate.html', {
+        'track': track_coefficient.track,
+        'vibe': vibe,
+        'rating_count': len(rated_track_ids),
+        'total_tracks': TrackCoefficient.objects.filter(vibe=vibe, user=user).count()
+    })

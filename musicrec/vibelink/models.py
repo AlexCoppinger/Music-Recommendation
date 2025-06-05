@@ -68,7 +68,7 @@ class TrackPlaylist(models.Model):
     """
     Model representing the many-to-many relationship between tracks and playlists.
     """
-    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name='tracks')
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
 
     order = models.IntegerField(default=0)  # To maintain the order of tracks in the playlist

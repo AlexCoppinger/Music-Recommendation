@@ -48,7 +48,7 @@ def import_items(query, type, force_new=False):
     done = False
     if not force_new:
         if type == 'track':
-            existing_search_results
+            existing_search_results = TrackSearchResult.objects.filter(query=query)
         else:
             existing_search_results = PlaylistSearchResult.objects.filter(query=query)
 
@@ -86,8 +86,8 @@ def import_items(query, type, force_new=False):
                 continue
 
             if type == 'playlist':
-                if settings.DEBUG:
-                    print(f"Importing playlist: {item['name']}")
+                # if settings.DEBUG:
+                #     print(f"Importing playlist: {item['name']}")
 
                 # Add the playlist to our database
                 p, _ = Playlist.objects.update_or_create(
@@ -114,10 +114,10 @@ def import_items(query, type, force_new=False):
             elif type == 'track':
                 # Add track to the database
                 t, _ = Track.objects.update_or_create(
-                    name=item['name'],
-                    spotify_id=item['id'],
-                    uri=item['uri'],
+                    spotify_id=item['id'],  # Only use spotify_id for lookups
                     defaults={
+                        'name': item['name'],
+                        'uri': item['uri'],
                         'artist': item['artists'][0]['name'],
                         'album': item['album']['name'],
                         'duration_ms': item['duration_ms'],
