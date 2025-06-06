@@ -33,17 +33,17 @@
         <div class="track-container">
             <!-- Track Image -->
             <div class="track-image-container">
-                {% if track.album_image_url %}
-                    <img src="{{ track.image_url }}" alt="{{ track.image_url }}" class="track-image">
+                {% if track.image_url %}
+                    <img src="{{ track.image_url }}" alt="{{ track.name }}" class="track-image">
                 {% else %}
                     <div class="track-image-placeholder">NO IMAGE</div>
                 {% endif %}
-                
-                <!-- Play Button with Logo -->
-                <button class="play-btn" data-track-id="{{ track.id }}">
-                    <img src="{% static 'vibelink/images/vibelinklogo.png' %}" alt="Play on Spotify" class="play-logo">
-                </button>
-            </div>
+    
+            <!-- Play Button with Logo -->
+            <button class="play-btn" data-track-id="{{ track.id }}">
+                <img src="{% static 'vibelink/images/vibelinklogo.png' %}" alt="Play on Spotify" class="play-logo">
+            </button>
+        </div>
             
             <!-- Track Info -->
             <div class="track-info">
@@ -524,7 +524,7 @@
                     body: JSON.stringify({
                         track_id: trackId,
                         rating: rating,
-                        vibe_id: {{ vibe.id }} // Pass the vibe ID
+                        vibe_id: {{ vibe.id }}
                     })
                 })
                 .then(response => response.json())
@@ -547,9 +547,10 @@
                         
                         // Remove banner and load next page after delay
                         setTimeout(() => {
-                            window.location.href = data.next_track_available 
-                                ? "{% url 'vibelink:rate_song' %}?vibe={{ vibe.id }}" 
+                            const nextUrl = data.next_track_available 
+                                ? "{% url 'vibelink:rate_song' %}?vibe={{ vibe.id }}"
                                 : "{% url 'vibelink:vibe_detail' vibe_name=vibe.name %}";
+                            window.location.href = nextUrl;
                         }, 1500);
                     } else {
                         // Restore button
