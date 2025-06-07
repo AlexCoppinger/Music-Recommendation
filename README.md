@@ -87,4 +87,16 @@ A modular music recommendation system that lets users create and customize their
   - **Dynamic “Widen/Narrow” Controls**: allow users to expand or contract their music bubble in real time—e.g., widen: include related subgenres; narrow: filter by tighter similarity thresholds.  
   - **Negative Feedback Handling**: allow explicit “remove” actions to exclude tracks entirely from the vibe instead of merely setting coefficient to zero.  
 
+---
+
+**LOADING LOCALHOST SERVER**
+
+Run through Terminal Window in IDE, after cloning repo to home directory:
+_cd ~/Music-Recommendation/musicrec_
+_python manage.py runserver_
+
+Then open to this page on a browser window:
+_http://127.0.0.1:8000/_
+
+
 
