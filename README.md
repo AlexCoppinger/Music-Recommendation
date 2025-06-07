@@ -3,18 +3,18 @@ A modular music recommendation system that lets users create and customize their
 
 ---
 
+### PROJECT TEAM
+- _Alex Coppinger_
+- _Federico Aprile_
+
+---
+
 - **Modular, User‐Driven Recommendations**  
   Vibelink empowers users to build, save, and iterate on their own recommendation “vibes” (algorithms) instead of passively consuming one-off song suggestions.  
 - **“Music Spaces” vs. Single Tracks**  
   Rather than recommending a single song, Vibelink models an entire music environment based on user‐defined criteria (e.g., genre, mood). Users generate a “vibe” that represents a custom music bubble, inside which new tracks are discovered. For each algorithm, the user rates the song presented to them–they can then add it or/and move on to the next song.
 - **Long-Term, Editable Algorithms**  
   Each vibe is stored in the database so users can revisit, refine, and expand it over time—allowing for deeper, fine-tuned exploration of a chosen music space.  
-
----
-
-### PROJECT TEAM
-- _Alex Coppinger_
-- _Federico Aprile_
 
 ---
 
