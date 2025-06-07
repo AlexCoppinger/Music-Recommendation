@@ -89,14 +89,16 @@ A modular music recommendation system that lets users create and customize their
 
 ---
 
-**LOADING LOCALHOST SERVER**
+### LOADING LOCALHOST SERVER
 
-Run through Terminal Window in IDE, after cloning repo to home directory:
-_cd ~/Music-Recommendation/musicrec_
-_python manage.py runserver_
+**Run through Terminal Window in IDE, after cloning repo to home directory:**
 
-Then open to this page on a browser window:
-_http://127.0.0.1:8000/_
+    cd ~/Music-Recommendation/musicrec
+    python manage.py runserver
+
+**Then open to this page on a browser window:**
+
+    http://127.0.0.1:8000/
 
 
 
