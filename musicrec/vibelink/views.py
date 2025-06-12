@@ -16,29 +16,6 @@ import spotipy
 import uuid
 import json
 
-# The following function are irrelevant to our app now
-# They're just here for reference:
-
-# def playlist_search_view(request):
-#     print("search_spotify_playlists called")
-#     query = request.GET.get('query', '')
-#     playlists = []
-#     if query:
-#         try:
-#             playlists = search_playlists(query)
-#         except Exception as e:
-#             return render(request, 'vibelink/search.html', {'error': str(e)})
-#     return render(request, 'vibelink/search.html', {'playlists': playlists})
-
-# def track_search_view(request):
-#     query = request.GET.get('query', '')
-#     tracks = []
-#     if query:
-#         try:
-#             tracks = search_tracks(query)
-#         except Exception as e:
-#             return render(request, 'vibelink/search.html', {'error': str(e)})
-#     return render(request, 'vibelink/search.html', {'tracks': tracks})
 
 def home(request):
     return render(request, 'vibelink/home.html')
@@ -174,39 +151,38 @@ def new_vibe_view(request):
             vibe = Vibe.objects.create(name=vibe_name, description=description)
             user_vibe = UserVibe.objects.create(user=user, vibe=vibe, search_term=search_term)
 
-            # Import playlists and tracks from Spotify
-            # There seems to be some fishy stuff going on here, but I'll look over it later
-            # context = import_items(query=search_term, type='playlist')
-            # # Fishy stuff in context right now
+            # Perform playlist search using the search term
+            context = import_items(query=search_term, type='playlist', force_new=True, limit=25)
+            
+            # print(f"list of tracks: {[track.name for track in context['tracks']]}")
+            
+            # Extract tracks from the imported playlists
+            track_playlists = []
+            for playlist in context['playlists']:
+                track_playlists.extend(import_playlist_tracks(playlist))
 
-            # track_playlists = []  # To store TrackPlaylist objects
+            # Save tracks into the vibe and associate them with the user
+            existing_coefficients = set(
+                TrackCoefficient.objects.filter(
+                user=user,
+                vibe=vibe,
+                track__in=[track_playlist.track for track_playlist in track_playlists]
+            ).values_list('track_id', flat=True)
+            )
 
-            # # Associate playlists with UserVibe
-            # for playlist in context['playlists']:
-            #     UserVibePlaylist.objects.get_or_create(
-            #         playlist=playlist,
-            #         defaults={'user_vibe': user_vibe}
-            #     )
-
-            #     # Import tracks from playlists and create TrackPlaylist objects
-            #     track_playlists.extend(import_playlist_tracks(playlist))
-
-            context = import_items(query=search_term, type='track')
-            print(f"list of tracks: {[track.name for track in context['tracks']]}")
-            # Associate tracks with "Vibe & User
             track_coefficients = [
                 TrackCoefficient(
-                    track=track,
-                    user=user,
-                    vibe=vibe,
-                    coefficient=0.0
-                )
-                for track in context['tracks']
+                track=track_playlist.track,  # Access the `track` attribute of each `TrackPlaylist` object
+                user=user,
+                vibe=vibe,
+                coefficient=0.0
+            )
+            for track_playlist in track_playlists  # Iterate over the elements in the list
+            if track_playlist.track.id not in existing_coefficients  # Check if the track is already associated with the user and vibe
             ]
 
-            print(f"Creating {len(track_coefficients)} TrackCoefficient objects for vibe '{vibe_name}'")
-
-            TrackCoefficient.objects.bulk_create(track_coefficients)
+            if track_coefficients: # only bulk create if there are new coefficients to add
+                TrackCoefficient.objects.bulk_create(track_coefficients, ignore_conflicts=True)
 
             print("Vibe and coefficients created.")
             return redirect('vibelink:vibes')
@@ -332,6 +308,7 @@ def submit_rating(request):
             track_id = data.get('track_id')
             rating_value = data.get('rating')
             vibe_id = request.session.get('selected_vibe')
+            vibe = Vibe.objects.get(id=vibe_id) if vibe_id else None
             
             if not track_id or not rating_value:
                 return JsonResponse({'success': False, 'error': 'Missing track_id or rating'}, status=400)
@@ -342,6 +319,7 @@ def submit_rating(request):
             rating, created = TrackRating.objects.update_or_create(
                 user=request.user,
                 track=track,
+                vibe=vibe,
                 defaults={'rating': rating_value}
             )
             
@@ -408,6 +386,7 @@ def rate_song_view(request):
     
     # Get all tracks for this vibe that haven't been rated by this user yet
     rated_track_ids = TrackRating.objects.filter(
+        vibe=vibe,
         user=user,
         track__trackcoefficient__vibe=vibe
     ).values_list('track_id', flat=True)
@@ -433,3 +412,29 @@ def rate_song_view(request):
         'rating_count': len(rated_track_ids),
         'total_tracks': TrackCoefficient.objects.filter(vibe=vibe, user=user).count()
     })
+
+
+
+# The following function are irrelevant to our app now
+# They're just here for reference:
+
+# def playlist_search_view(request):
+#     print("search_spotify_playlists called")
+#     query = request.GET.get('query', '')
+#     playlists = []
+#     if query:
+#         try:
+#             playlists = search_playlists(query)
+#         except Exception as e:
+#             return render(request, 'vibelink/search.html', {'error': str(e)})
+#     return render(request, 'vibelink/search.html', {'playlists': playlists})
+
+# def track_search_view(request):
+#     query = request.GET.get('query', '')
+#     tracks = []
+#     if query:
+#         try:
+#             tracks = search_tracks(query)
+#         except Exception as e:
+#             return render(request, 'vibelink/search.html', {'error': str(e)})
+#     return render(request, 'vibelink/search.html', {'tracks': tracks})

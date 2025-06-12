@@ -24,15 +24,12 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 # This section is for searching for playlists and tracks
 # and saving them to the database
 
-def import_items(query, type, force_new=False):
+def import_items(query, type, force_new=False, limit=50):
     """
     Import items from Spotify based on the query and type.
     """
     # Get a Spotify client
     sp = get_spotify_client()
-
-    # Run our search
-    results = sp.search(q=query, type=type, limit=50)
 
     # Initialize our context
     context = {
@@ -46,29 +43,14 @@ def import_items(query, type, force_new=False):
 
     # Check whether we've imported items for this search query
     done = False
-    if not force_new:
-        if type == 'track':
-            existing_search_results = TrackSearchResult.objects.filter(query=query)
-        else:
-            existing_search_results = PlaylistSearchResult.objects.filter(query=query)
-
-        if existing_search_results.exists():
-            context['using_existing_search_results'] = True
-            context[f"{type}s"] = existing_search_results.values_list(type, flat=True)
-            done = True
-
-        else:
-            context['using_existing_search_results'] = False
-
-
-    # We are going to search until there are no more results
+    total_imported = 0  # Track the total number of items imported
     is_first = True
+
     while not done:
         if is_first:
             # Search for the first batch of results
-            results = sp.search(q=query, type=type, limit=50)
+            results = sp.search(q=query, type=type, limit=limit)
             is_first = False
-
         else:
             # Search for the next batch of results
             results = sp.next(curr_results)
@@ -83,13 +65,23 @@ def import_items(query, type, force_new=False):
 
         for item in items:
             if not item:
+                print("Skipping invalid item: None")
                 continue
 
-            if type == 'playlist':
-                # if settings.DEBUG:
-                #     print(f"Importing playlist: {item['name']}")
+            # Ensure that the item has an owner field
+            owner = item.get('owner')
+            if not owner:
+                print(f"Skipping item without owner: {item.get('name', 'Unknown')}")
+                continue
 
-                # Add the playlist to our database
+            owner_name = owner.get('display_name', 'Unknown')
+            print(f"Importing playlist: {item['name']} by {owner_name}")
+            
+            if total_imported >= limit:
+                done = True
+                break
+
+            if type == 'playlist':
                 p, _ = Playlist.objects.update_or_create(
                     spotify_id=item['id'],
                     defaults={
@@ -107,14 +99,11 @@ def import_items(query, type, force_new=False):
 
                 # Add the playlist to our context
                 context['playlists'].append(p.id)
-
-                # Associate the playlist with the search query
-                psr, _ = PlaylistSearchResult.objects.get_or_create(query=query, playlist=p)
+                total_imported += 1
 
             elif type == 'track':
-                # Add track to the database
                 t, _ = Track.objects.update_or_create(
-                    spotify_id=item['id'],  # Only use spotify_id for lookups
+                    spotify_id=item['id'],
                     defaults={
                         'name': item['name'],
                         'uri': item['uri'],
@@ -125,24 +114,18 @@ def import_items(query, type, force_new=False):
                         'image_url': item['album']['images'][0]['url'] if item['album']['images'] else '',
                     }
                 )
-                # Add the track to our context
                 context['tracks'].append(t.id)
-
-                # Associate the track with the search query
-                tsr, _ = TrackSearchResult.objects.get_or_create(query=query, track=t)
+                total_imported += 1
 
         # Check if there are more results
         if not curr_results['next']:
-            # If there are no more results, set done to True
             done = True
 
     # Convert the context lists to QuerySets
     context['playlists'] = Playlist.objects.filter(id__in=context['playlists'])
     context['tracks'] = Track.objects.filter(id__in=context['tracks'])
 
-    # Return the context
     return context
-
 
 # This section will be to login and authenticate the user
 # I want to authenticate a user through spotify, then create a user in the database that will have their associated
@@ -223,6 +206,8 @@ def import_playlist_tracks(playlist):
                     'album': track['album']['name'],
                     'duration_ms': track['duration_ms'],
                     'preview_url': track.get('preview_url'),
+                    'uri': track.get('uri'),
+                    'image_url': track['album']['images'][0]['url'] if track['album']['images'] else ''
                 }
             )
 
@@ -230,18 +215,13 @@ def import_playlist_tracks(playlist):
             track_num += 1
 
             # Create our TrackXPlaylist object
-            txp, _ = TrackPlaylist.objects.update_or_create(
+            TrackPlaylist.objects.update_or_create(
                 track=t,
                 playlist=playlist,
                 defaults={
                     'order': track_num,
                 }
             )
-
-
-            # Don't have time to figure this out
-            # if settings.DEBUG:
-            #     print(f"Importing track {track_num}: {t.name} from playlist: {playlist.name}")
 
         # Check if there are more tracks to fetch
         if result['next']:

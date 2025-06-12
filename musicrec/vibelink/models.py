@@ -171,6 +171,7 @@ class TrackRating(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    vibe = models.ForeignKey(Vibe, on_delete=models.CASCADE, null=True, blank=True)
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     rating = models.IntegerField(choices=RATING_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
