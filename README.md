@@ -1,8 +1,10 @@
-
-
-
 # Vibelink
 A modular music recommendation system that lets users create and customize their own “vibes” (personalized recommendation algorithms) rather than relying on a black-box.
+
+---
+**TEAM:**
+_Alex Coppinger_ and _Federico Aprile_
+
 
 ---
 
