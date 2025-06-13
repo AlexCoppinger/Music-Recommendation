@@ -4,6 +4,9 @@ A modular music recommendation system that lets users create and customize their
 ---
 **TEAM:**
 _Alex Coppinger_
+
+<br>
+
 _Federico Aprile_
 
 
